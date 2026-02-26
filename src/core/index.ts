@@ -1,4 +1,4 @@
-export { preprocessStrokes } from "./preprocessing";
+export { preprocessStrokes, isStrokeMeaningful } from "./preprocessing";
 export type { Stroke, StrokePoint, PreprocessResult } from "./preprocessing";
 
 export { InferenceEngine } from "./inference";

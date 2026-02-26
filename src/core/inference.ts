@@ -276,11 +276,26 @@ export class InferenceEngine {
               finished: true,
             });
           } else {
-            candidates.push({
-              logProb: newLogProb,
-              ids: [...beam.ids, idx],
-              finished: false,
-            });
+            // Repeat detection: stop beam if token repeated REPEAT_LIMIT times
+            const ids = beam.ids;
+            let repeatCount = 0;
+            for (let j = ids.length - 1; j >= 1; j--) {
+              if (ids[j] === idx) repeatCount++;
+              else break;
+            }
+            if (repeatCount >= REPEAT_LIMIT) {
+              candidates.push({
+                logProb: newLogProb,
+                ids: beam.ids,
+                finished: true,
+              });
+            } else {
+              candidates.push({
+                logProb: newLogProb,
+                ids: [...beam.ids, idx],
+                finished: false,
+              });
+            }
           }
         }
       }

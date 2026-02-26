@@ -3,7 +3,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
 import MathCanvas from './components/MathCanvas.vue';
-import { InferenceEngine, preprocessStrokes, loadVocab } from './core';
+import { InferenceEngine, preprocessStrokes, isStrokeMeaningful, loadVocab } from './core';
 import type { Stroke, RecognitionResult, Vocab } from './core';
 
 const canvasRef = ref<InstanceType<typeof MathCanvas> | null>(null);
@@ -68,6 +68,12 @@ async function onStrokesChange(strokes: Stroke[]) {
     return;
   }
 
+  // Skip tiny strokes (dots, accidental taps)
+  if (!isStrokeMeaningful(strokes)) {
+    result.value = null;
+    return;
+  }
+
   if (idleTimer) clearTimeout(idleTimer);
   status.value = 'Waiting...';
   idleTimer = setTimeout(async () => {
@@ -76,8 +82,14 @@ async function onStrokesChange(strokes: Stroke[]) {
     try {
       const input = preprocessStrokes(strokes);
       const res = await engine!.recognize(input, vocab!);
-      result.value = res;
-      status.value = `${res.totalMs}ms (enc ${res.encoderMs}ms + dec ${res.decoderMs}ms)`;
+      // Ignore empty or garbage results
+      if (!res.latex.trim() || res.tokenIds.length === 0) {
+        result.value = null;
+        status.value = 'Draw a math expression';
+      } else {
+        result.value = res;
+        status.value = `${res.totalMs}ms (enc ${res.encoderMs}ms + dec ${res.decoderMs}ms)`;
+      }
     } catch (err) {
       status.value = `Error: ${err}`;
     } finally {

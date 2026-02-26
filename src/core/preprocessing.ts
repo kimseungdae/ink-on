@@ -130,6 +130,31 @@ function canvasToGrayscaleTensor(canvas: HTMLCanvasElement): Float32Array {
   return tensor;
 }
 
+const MIN_STROKE_SIZE = 8; // minimum bbox dimension in canvas pixels
+const MIN_TOTAL_POINTS = 6; // minimum total points across all strokes
+const MIN_PATH_LENGTH = 15; // minimum total path length in canvas pixels
+
+export function isStrokeMeaningful(strokes: Stroke[]): boolean {
+  if (strokes.length === 0) return false;
+  const bbox = computeBBox(strokes);
+  const w = bbox.maxX - bbox.minX;
+  const h = bbox.maxY - bbox.minY;
+  if (w < MIN_STROKE_SIZE && h < MIN_STROKE_SIZE) return false;
+
+  // Check total points — dots/taps have very few points
+  let totalPoints = 0;
+  let totalLength = 0;
+  for (const s of strokes) {
+    totalPoints += s.points.length;
+    for (let i = 1; i < s.points.length; i++) {
+      const dx = s.points[i]!.x - s.points[i - 1]!.x;
+      const dy = s.points[i]!.y - s.points[i - 1]!.y;
+      totalLength += Math.sqrt(dx * dx + dy * dy);
+    }
+  }
+  return totalPoints >= MIN_TOTAL_POINTS && totalLength >= MIN_PATH_LENGTH;
+}
+
 export function preprocessStrokes(strokes: Stroke[]): PreprocessResult {
   const rawCanvas = renderStrokes(strokes);
   const { canvas, contentH, contentW, canvasW } = scaleToFit(rawCanvas);
