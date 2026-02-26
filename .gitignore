@@ -26,3 +26,4 @@ dist-ssr
 # Large binary files
 public/models/
 public/*.wasm
+public/*.mjs

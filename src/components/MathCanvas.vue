@@ -26,11 +26,19 @@ let currentPoints: StrokePoint[] = [];
 function getPos(e: MouseEvent | TouchEvent): StrokePoint {
   const canvas = canvasRef.value!;
   const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
   if ('touches' in e) {
     const touch = e.touches[0];
-    return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+    return {
+      x: (touch.clientX - rect.left) * scaleX,
+      y: (touch.clientY - rect.top) * scaleY,
+    };
   }
-  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  return {
+    x: (e.clientX - rect.left) * scaleX,
+    y: (e.clientY - rect.top) * scaleY,
+  };
 }
 
 function startDraw(e: MouseEvent | TouchEvent) {
@@ -57,26 +65,53 @@ function endDraw() {
   }
 }
 
+function drawSmoothStroke(ctx: CanvasRenderingContext2D, points: StrokePoint[]) {
+  if (points.length === 0) return;
+  if (points.length === 1) {
+    ctx.beginPath();
+    ctx.arc(points[0].x, points[0].y, ctx.lineWidth / 2, 0, Math.PI * 2);
+    ctx.fill();
+    return;
+  }
+
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+
+  if (points.length === 2) {
+    ctx.lineTo(points[1].x, points[1].y);
+  } else {
+    // Quadratic curve through midpoints for smooth strokes
+    for (let i = 1; i < points.length - 1; i++) {
+      const mx = (points[i].x + points[i + 1].x) / 2;
+      const my = (points[i].y + points[i + 1].y) / 2;
+      ctx.quadraticCurveTo(points[i].x, points[i].y, mx, my);
+    }
+    const last = points[points.length - 1];
+    ctx.lineTo(last.x, last.y);
+  }
+  ctx.stroke();
+}
+
 function redraw() {
   const canvas = canvasRef.value;
   if (!canvas) return;
   const ctx = canvas.getContext('2d')!;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  const allStrokes = [...strokes.value, ...(currentPoints.length > 0 ? [{ points: currentPoints, lineWidth: props.lineWidth }] : [])];
+  const allStrokes = [
+    ...strokes.value,
+    ...(currentPoints.length > 0
+      ? [{ points: currentPoints, lineWidth: props.lineWidth }]
+      : []),
+  ];
 
   for (const stroke of allStrokes) {
-    if (stroke.points.length === 0) continue;
-    ctx.beginPath();
     ctx.strokeStyle = props.strokeColor;
+    ctx.fillStyle = props.strokeColor;
     ctx.lineWidth = stroke.lineWidth;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
-    for (let i = 1; i < stroke.points.length; i++) {
-      ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
-    }
-    ctx.stroke();
+    drawSmoothStroke(ctx, stroke.points);
   }
 }
 
@@ -128,10 +163,11 @@ onUnmounted(() => {
 
 <style scoped>
 .math-canvas {
-  border: 2px solid #ccc;
-  border-radius: 8px;
   cursor: crosshair;
   touch-action: none;
   background: #fff;
+  width: 100%;
+  height: auto;
+  min-height: 200px;
 }
 </style>
