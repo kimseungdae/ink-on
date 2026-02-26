@@ -70,10 +70,10 @@ function renderStrokes(strokes: Stroke[]): HTMLCanvasElement {
     if (stroke.points.length === 0) continue;
     ctx.beginPath();
     ctx.lineWidth = Math.max(2, stroke.lineWidth);
-    const first = stroke.points[0];
+    const first = stroke.points[0]!;
     ctx.moveTo(first.x - bbox.minX + PAD, first.y - bbox.minY + PAD);
     for (let i = 1; i < stroke.points.length; i++) {
-      const p = stroke.points[i];
+      const p = stroke.points[i]!;
       ctx.lineTo(p.x - bbox.minX + PAD, p.y - bbox.minY + PAD);
     }
     ctx.stroke();
@@ -121,9 +121,9 @@ function canvasToGrayscaleTensor(canvas: HTMLCanvasElement): Float32Array {
   for (let i = 0; i < pixels; i++) {
     const offset = i * 4;
     const gray =
-      (data[offset] * 0.299 +
-        data[offset + 1] * 0.587 +
-        data[offset + 2] * 0.114) /
+      (data[offset]! * 0.299 +
+        data[offset + 1]! * 0.587 +
+        data[offset + 2]! * 0.114) /
       255;
     tensor[i] = gray;
   }

@@ -27,3 +27,6 @@ dist-ssr
 public/models/
 public/*.wasm
 public/*.mjs
+
+# Library build output
+dist-lib

@@ -158,6 +158,8 @@ function handleCopy() {
 
     <footer>
       <span>CoMER (ECCV 2022) &middot; ONNX Runtime Web &middot; INT8 7.2MB</span>
+      <br />
+      <span class="email">kocacolla@gmail.com</span>
     </footer>
   </div>
 </template>
@@ -294,6 +296,7 @@ footer {
   font-size: 0.75rem;
   color: #bbb;
 }
+.email { color: #ccc; }
 
 @media (max-width: 600px) {
   .app { padding: 0.75rem 0.5rem; }

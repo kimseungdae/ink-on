@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "declarationDir": "dist-lib/types",
+    "emitDeclarationOnly": true,
+    "outDir": "dist-lib/types",
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.lib.tsbuildinfo"
+  },
+  "include": ["src/lib.ts", "src/core/**/*.ts", "src/components/**/*.vue"]
+}

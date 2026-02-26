@@ -1,24 +1,74 @@
 {
   "name": "vue-math-handwrite",
-  "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
+  "description": "Handwritten math expression recognition in the browser. Vue 3 canvas component + framework-agnostic ONNX inference engine powered by CoMER (ECCV 2022).",
+  "keywords": [
+    "math",
+    "handwriting",
+    "recognition",
+    "latex",
+    "vue",
+    "onnx",
+    "comer",
+    "canvas",
+    "ocr",
+    "wasm"
+  ],
+  "author": "kimseungdae <kocacolla@gmail.com>",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kimseungdae/vue-math-handwrite.git"
+  },
+  "homepage": "https://github.com/kimseungdae/vue-math-handwrite#readme",
+  "bugs": {
+    "url": "https://github.com/kimseungdae/vue-math-handwrite/issues"
+  },
+  "main": "./dist-lib/index.js",
+  "module": "./dist-lib/index.js",
+  "types": "./dist-lib/types/lib.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist-lib/index.js",
+      "types": "./dist-lib/types/lib.d.ts"
+    },
+    "./core": {
+      "import": "./dist-lib/core.js",
+      "types": "./dist-lib/types/core/index.d.ts"
+    }
+  },
+  "files": [
+    "dist-lib",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "build:lib": "vite build --config vite.config.lib.ts && vue-tsc --project tsconfig.lib.json --declaration --emitDeclarationOnly --declarationDir dist-lib/types",
+    "preview": "vite preview",
+    "prepublishOnly": "npm run build:lib"
   },
-  "dependencies": {
-    "katex": "^0.16.33",
-    "onnxruntime-web": "^1.24.2",
-    "vue": "^3.5.25"
+  "peerDependencies": {
+    "vue": "^3.3.0",
+    "onnxruntime-web": "^1.17.0"
+  },
+  "peerDependenciesMeta": {
+    "vue": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
     "@vitejs/plugin-vue": "^6.0.2",
     "@vue/tsconfig": "^0.8.1",
+    "katex": "^0.16.33",
+    "onnxruntime-web": "^1.24.2",
     "typescript": "~5.9.3",
     "vite": "^7.3.1",
+    "vue": "^3.5.25",
     "vue-tsc": "^3.1.5"
   }
 }

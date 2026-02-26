@@ -29,7 +29,7 @@ function getPos(e: MouseEvent | TouchEvent): StrokePoint {
   const scaleX = canvas.width / rect.width;
   const scaleY = canvas.height / rect.height;
   if ('touches' in e) {
-    const touch = e.touches[0];
+    const touch = e.touches[0]!;
     return {
       x: (touch.clientX - rect.left) * scaleX,
       y: (touch.clientY - rect.top) * scaleY,
@@ -69,24 +69,24 @@ function drawSmoothStroke(ctx: CanvasRenderingContext2D, points: StrokePoint[]) 
   if (points.length === 0) return;
   if (points.length === 1) {
     ctx.beginPath();
-    ctx.arc(points[0].x, points[0].y, ctx.lineWidth / 2, 0, Math.PI * 2);
+    ctx.arc(points[0]!.x, points[0]!.y, ctx.lineWidth / 2, 0, Math.PI * 2);
     ctx.fill();
     return;
   }
 
   ctx.beginPath();
-  ctx.moveTo(points[0].x, points[0].y);
+  ctx.moveTo(points[0]!.x, points[0]!.y);
 
   if (points.length === 2) {
-    ctx.lineTo(points[1].x, points[1].y);
+    ctx.lineTo(points[1]!.x, points[1]!.y);
   } else {
     // Quadratic curve through midpoints for smooth strokes
     for (let i = 1; i < points.length - 1; i++) {
-      const mx = (points[i].x + points[i + 1].x) / 2;
-      const my = (points[i].y + points[i + 1].y) / 2;
-      ctx.quadraticCurveTo(points[i].x, points[i].y, mx, my);
+      const mx = (points[i]!.x + points[i + 1]!.x) / 2;
+      const my = (points[i]!.y + points[i + 1]!.y) / 2;
+      ctx.quadraticCurveTo(points[i]!.x, points[i]!.y, mx, my);
     }
-    const last = points[points.length - 1];
+    const last = points[points.length - 1]!;
     ctx.lineTo(last.x, last.y);
   }
   ctx.stroke();
