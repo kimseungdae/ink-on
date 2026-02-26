@@ -23,10 +23,11 @@ dist-ssr
 *.sln
 *.sw?
 
-# Large binary files
-public/models/
+# WASM binaries (provided by onnxruntime-web at build time)
 public/*.wasm
 public/*.mjs
 
 # Library build output
 dist-lib
+
+.vercel

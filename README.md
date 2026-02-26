@@ -6,7 +6,7 @@
 [![npm version](https://img.shields.io/npm/v/vue-math-handwrite.svg)](https://www.npmjs.com/package/vue-math-handwrite)
 [![license](https://img.shields.io/npm/l/vue-math-handwrite.svg)](./LICENSE)
 
-[English](#features) | [한국어](#한국어)
+**[Live Demo](https://vue-math-handwrite.vercel.app)** | [English](#features) | [한국어](#한국어)
 
 ---
 
@@ -444,6 +444,8 @@ This library runs [CoMER](https://github.com/Green-Wood/CoMER) (Coverage-guided 
 
 > 브라우저에서 완전히 실행되는 손글씨 수학 수식 인식 라이브러리.
 > Vue 3 캔버스 컴포넌트 + 프레임워크 독립 ONNX 추론 엔진. [CoMER](https://github.com/Green-Wood/CoMER) (ECCV 2022) 기반.
+
+**[라이브 데모](https://vue-math-handwrite.vercel.app)**
 
 ## 기능
 
