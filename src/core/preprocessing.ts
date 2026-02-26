@@ -18,7 +18,9 @@ export interface PreprocessResult {
 }
 
 const MODEL_H = 256;
-const MODEL_W = 1024;
+const MAX_W = 1024;
+const MIN_W = 128;
+const W_ALIGN = 64; // align width to multiple of 64 for conv/pool layers
 const TARGET_H = 128; // CROHME images avg ~107px height; scale content to this range
 const PAD = 16;
 
@@ -83,24 +85,30 @@ function scaleToFit(src: HTMLCanvasElement): {
   canvas: HTMLCanvasElement;
   contentH: number;
   contentW: number;
+  canvasW: number;
 } {
-  const target = createCanvas(MODEL_W, MODEL_H);
+  // Scale content to TARGET_H height (matching CROHME training proportions)
+  const scale = Math.min(TARGET_H / src.height, MAX_W / src.width);
+  const dw = Math.max(1, Math.round(src.width * scale));
+  const dh = Math.max(1, Math.round(src.height * scale));
+
+  // Dynamic width: content width + margin, aligned to W_ALIGN, clamped to [MIN_W, MAX_W]
+  const canvasW = Math.min(
+    MAX_W,
+    Math.max(MIN_W, Math.ceil((dw + PAD) / W_ALIGN) * W_ALIGN),
+  );
+
+  const target = createCanvas(canvasW, MODEL_H);
   const ctx = target.getContext("2d")!;
 
   // Black background (matching CROHME training data)
   ctx.fillStyle = "#000000";
-  ctx.fillRect(0, 0, MODEL_W, MODEL_H);
-
-  // Scale content to TARGET_H height (matching CROHME training proportions)
-  // CROHME images are ~60-215px high (mean ~107), never filling the full 256px
-  const scale = Math.min(TARGET_H / src.height, MODEL_W / src.width);
-  const dw = Math.max(1, Math.round(src.width * scale));
-  const dh = Math.max(1, Math.round(src.height * scale));
+  ctx.fillRect(0, 0, canvasW, MODEL_H);
 
   // Top-left alignment (CROHME training convention, NOT centered)
   ctx.drawImage(src, 0, 0, dw, dh);
 
-  return { canvas: target, contentH: dh, contentW: dw };
+  return { canvas: target, contentH: dh, contentW: dw, canvasW };
 }
 
 function canvasToGrayscaleTensor(canvas: HTMLCanvasElement): Float32Array {
@@ -124,23 +132,23 @@ function canvasToGrayscaleTensor(canvas: HTMLCanvasElement): Float32Array {
 
 export function preprocessStrokes(strokes: Stroke[]): PreprocessResult {
   const rawCanvas = renderStrokes(strokes);
-  const { canvas, contentH, contentW } = scaleToFit(rawCanvas);
+  const { canvas, contentH, contentW, canvasW } = scaleToFit(rawCanvas);
   const tensor = canvasToGrayscaleTensor(canvas);
 
   // Mask: 1 = padding, 0 = valid content area
-  const mask = new Uint8Array(MODEL_H * MODEL_W);
+  const mask = new Uint8Array(MODEL_H * canvasW);
   for (let y = 0; y < MODEL_H; y++) {
-    for (let x = 0; x < MODEL_W; x++) {
-      mask[y * MODEL_W + x] = y < contentH && x < contentW ? 0 : 1;
+    for (let x = 0; x < canvasW; x++) {
+      mask[y * canvasW + x] = y < contentH && x < contentW ? 0 : 1;
     }
   }
 
   return {
     tensor,
     height: MODEL_H,
-    width: MODEL_W,
+    width: canvasW,
     mask,
     maskHeight: MODEL_H,
-    maskWidth: MODEL_W,
+    maskWidth: canvasW,
   };
 }
