@@ -1,8 +1,8 @@
 {
-  "name": "vue-math-handwrite",
+  "name": "ink-on",
   "version": "0.1.0",
   "type": "module",
-  "description": "Handwritten math expression recognition in the browser. Vue 3 canvas component + framework-agnostic ONNX inference engine powered by CoMER (ECCV 2022).",
+  "description": "Handwritten math expression recognition running entirely in the browser. Framework-agnostic ONNX inference engine powered by CoMER (ECCV 2022).",
   "keywords": [
     "math",
     "handwriting",
@@ -19,11 +19,11 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kimseungdae/vue-math-handwrite.git"
+    "url": "git+https://github.com/kimseungdae/ink-on.git"
   },
-  "homepage": "https://github.com/kimseungdae/vue-math-handwrite#readme",
+  "homepage": "https://github.com/kimseungdae/ink-on#readme",
   "bugs": {
-    "url": "https://github.com/kimseungdae/vue-math-handwrite/issues"
+    "url": "https://github.com/kimseungdae/ink-on/issues"
   },
   "main": "./dist-lib/index.js",
   "module": "./dist-lib/index.js",

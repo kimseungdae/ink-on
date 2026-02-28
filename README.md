@@ -1,12 +1,12 @@
-# vue-math-handwrite
+# ink-on
 
 > Handwritten math expression recognition running entirely in the browser.
-> Vue 3 canvas component + framework-agnostic ONNX inference engine powered by [CoMER](https://github.com/Green-Wood/CoMER) (ECCV 2022).
+> Framework-agnostic ONNX inference engine + Vue 3 canvas component, powered by [CoMER](https://github.com/Green-Wood/CoMER) (ECCV 2022).
 
-[![npm version](https://img.shields.io/npm/v/vue-math-handwrite.svg)](https://www.npmjs.com/package/vue-math-handwrite)
-[![license](https://img.shields.io/npm/l/vue-math-handwrite.svg)](./LICENSE)
+[![npm version](https://img.shields.io/npm/v/ink-on.svg)](https://www.npmjs.com/package/ink-on)
+[![license](https://img.shields.io/npm/l/ink-on.svg)](./LICENSE)
 
-**[Live Demo](https://vue-math-handwrite.vercel.app)** | [English](#features) | [한국어](#한국어)
+**[Live Demo](https://ink-on.vercel.app)** | [English](#features) | [한국어](#한국어)
 
 ---
 
@@ -83,7 +83,7 @@
 ### Installation
 
 ```bash
-npm install vue-math-handwrite
+npm install ink-on
 ```
 
 You also need the peer dependencies:
@@ -102,7 +102,7 @@ The ONNX models are **not included** in the npm package. Download and place them
 | `decoder_int8.onnx` | 4.0 MB | CoMER autoregressive decoder, INT8 quantized           |
 | `vocab.json`        | 4 KB   | Token vocabulary (245 symbols)                         |
 
-Place them at `public/models/comer/` or any path you choose. You can download them from the [GitHub repository releases](https://github.com/kimseungdae/vue-math-handwrite/releases).
+Place them at `public/models/comer/` or any path you choose. You can download them from the [GitHub repository releases](https://github.com/kimseungdae/ink-on/releases).
 
 ### Vue 3 Usage
 
@@ -115,8 +115,8 @@ import {
   preprocessStrokes,
   isStrokeMeaningful,
   loadVocab,
-} from "vue-math-handwrite";
-import type { Stroke, RecognitionResult, Vocab } from "vue-math-handwrite";
+} from "ink-on";
+import type { Stroke, RecognitionResult, Vocab } from "ink-on";
 
 const canvasRef = ref<InstanceType<typeof MathCanvas> | null>(null);
 const result = ref<RecognitionResult | null>(null);
@@ -159,7 +159,7 @@ async function onStrokesChange(strokes: Stroke[]) {
 
 ### Framework-Agnostic Usage (React, Svelte, Vanilla JS)
 
-Import from `vue-math-handwrite/core` to avoid the Vue dependency:
+Import from `ink-on/core` to avoid the Vue dependency:
 
 ```typescript
 import {
@@ -167,8 +167,8 @@ import {
   preprocessStrokes,
   isStrokeMeaningful,
   loadVocab,
-} from "vue-math-handwrite/core";
-import type { Stroke } from "vue-math-handwrite/core";
+} from "ink-on/core";
+import type { Stroke } from "ink-on/core";
 
 // Initialize once
 const vocab = await loadVocab("/models/comer/vocab.json");
@@ -443,9 +443,9 @@ This library runs [CoMER](https://github.com/Green-Wood/CoMER) (Coverage-guided 
 # 한국어
 
 > 브라우저에서 완전히 실행되는 손글씨 수학 수식 인식 라이브러리.
-> Vue 3 캔버스 컴포넌트 + 프레임워크 독립 ONNX 추론 엔진. [CoMER](https://github.com/Green-Wood/CoMER) (ECCV 2022) 기반.
+> 프레임워크 독립 ONNX 추론 엔진 + Vue 3 캔버스 컴포넌트. [CoMER](https://github.com/Green-Wood/CoMER) (ECCV 2022) 기반.
 
-**[라이브 데모](https://vue-math-handwrite.vercel.app)**
+**[라이브 데모](https://ink-on.vercel.app)**
 
 ## 기능
 
@@ -462,7 +462,7 @@ This library runs [CoMER](https://github.com/Green-Wood/CoMER) (Coverage-guided 
 ### 설치
 
 ```bash
-npm install vue-math-handwrite
+npm install ink-on
 ```
 
 피어 의존성도 필요합니다:
@@ -481,7 +481,7 @@ ONNX 모델은 npm 패키지에 **포함되지 않습니다**. 다운로드하�
 | `decoder_int8.onnx` | 4.0 MB | CoMER 오토리그레시브 디코더, INT8 양자화           |
 | `vocab.json`        | 4 KB   | 토큰 어휘 (245개 심볼)                             |
 
-`public/models/comer/`에 배치하거나 원하는 경로에 놓으세요. [GitHub 리포지토리 릴리즈](https://github.com/kimseungdae/vue-math-handwrite/releases)에서 다운로드할 수 있습니다.
+`public/models/comer/`에 배치하거나 원하는 경로에 놓으세요. [GitHub 리포지토리 릴리즈](https://github.com/kimseungdae/ink-on/releases)에서 다운로드할 수 있습니다.
 
 ### Vue 3 사용법
 
@@ -494,8 +494,8 @@ import {
   preprocessStrokes,
   isStrokeMeaningful,
   loadVocab,
-} from "vue-math-handwrite";
-import type { Stroke, RecognitionResult, Vocab } from "vue-math-handwrite";
+} from "ink-on";
+import type { Stroke, RecognitionResult, Vocab } from "ink-on";
 
 const canvasRef = ref<InstanceType<typeof MathCanvas> | null>(null);
 const result = ref<RecognitionResult | null>(null);
@@ -538,7 +538,7 @@ async function onStrokesChange(strokes: Stroke[]) {
 
 ### 프레임워크 독립 사용법 (React, Svelte, Vanilla JS)
 
-Vue 의존성 없이 `vue-math-handwrite/core`에서 import:
+Vue 의존성 없이 `ink-on/core`에서 import:
 
 ```typescript
 import {
@@ -546,8 +546,8 @@ import {
   preprocessStrokes,
   isStrokeMeaningful,
   loadVocab,
-} from "vue-math-handwrite/core";
-import type { Stroke } from "vue-math-handwrite/core";
+} from "ink-on/core";
+import type { Stroke } from "ink-on/core";
 
 const vocab = await loadVocab("/models/comer/vocab.json");
 const engine = new InferenceEngine({
