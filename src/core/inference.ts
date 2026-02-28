@@ -1,11 +1,14 @@
 import * as ort from "onnxruntime-web";
 import type { PreprocessResult } from "./preprocessing";
 import type { Vocab } from "./tokenizer";
-import { decodeTokenIds } from "./tokenizer";
+import { decodeToTokenArray } from "./tokenizer";
 import { fetchWithCache } from "./model-cache";
+import { repairLatex, isCompleteExpression } from "./latex-repair";
 
 ort.env.wasm.numThreads = navigator.hardwareConcurrency || 4;
 ort.env.wasm.simd = true;
+
+export type RecognitionMode = "auto" | "number" | "expression";
 
 export interface RecognitionResult {
   latex: string;
@@ -26,6 +29,38 @@ export interface InferenceEngineOptions {
 const DEFAULT_MAX_STEPS = 50;
 const REPEAT_LIMIT = 3;
 
+// Number mode: digits + basic operators + \frac + structural tokens
+const NUMBER_MODE_ALLOWED: Set<number> = new Set([
+  0,
+  1,
+  2, // <pad>, <sos>, <eos>
+  4,
+  5, // ( )
+  6,
+  8, // + -
+  9,
+  10, // . /
+  11,
+  12,
+  13,
+  14,
+  15, // 0 1 2 3 4
+  16,
+  17,
+  18,
+  19,
+  20, // 5 6 7 8 9
+  22, // =
+  50,
+  53,
+  69,
+  78, // \div \frac \pm \times
+  82,
+  83, // ^ _
+  110,
+  112, // { }
+]);
+
 function yieldToMain(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));
 }
@@ -34,6 +69,24 @@ interface Beam {
   logProb: number;
   ids: number[];
   finished: boolean;
+}
+
+interface BeamCandidate {
+  ids: number[];
+  logProb: number;
+}
+
+export function applyModeMask(
+  logProbs: Float64Array,
+  vocabSize: number,
+  allowed: Set<number> | null,
+): void {
+  if (!allowed) return;
+  for (let i = 0; i < vocabSize; i++) {
+    if (!allowed.has(i)) {
+      logProbs[i] = -Infinity;
+    }
+  }
 }
 
 export class InferenceEngine {
@@ -102,6 +155,7 @@ export class InferenceEngine {
       encoder_mask: encoderMask,
       input_ids: inputIds,
     });
+    inputIds.dispose();
     return res["logits"]!.data as Float32Array;
   }
 
@@ -136,6 +190,7 @@ export class InferenceEngine {
   async recognize(
     input: PreprocessResult,
     vocab: Vocab,
+    mode: RecognitionMode = "auto",
   ): Promise<RecognitionResult> {
     await this.init();
     const t0 = performance.now();
@@ -156,6 +211,9 @@ export class InferenceEngine {
       pixel_values: pixelValues,
       pixel_mask: pixelMask,
     });
+    pixelValues.dispose();
+    pixelMask.dispose();
+
     const encoderFeatures = encResult["encoder_features"]!;
     const encoderMask = encResult["encoder_mask"]!;
     const t1 = performance.now();
@@ -163,7 +221,10 @@ export class InferenceEngine {
     const { sos, eos } = vocab.special_tokens;
     const vocabSize = vocab.vocab_size;
     const beamWidth = this.options.beamWidth;
+    const allowedTokens = mode === "number" ? NUMBER_MODE_ALLOWED : null;
+
     let resultIds: number[];
+    let resultLatex: string;
 
     if (beamWidth <= 1) {
       resultIds = await this.greedyDecode(
@@ -172,22 +233,59 @@ export class InferenceEngine {
         sos,
         eos,
         vocabSize,
+        allowedTokens,
       );
+      const tokens = decodeToTokenArray(resultIds, vocab);
+      const repaired = repairLatex(tokens);
+      resultLatex = repaired.join(" ");
     } else {
-      resultIds = await this.beamDecode(
+      const candidates = await this.beamDecode(
         encoderFeatures,
         encoderMask,
         sos,
         eos,
         vocabSize,
         beamWidth,
+        allowedTokens,
       );
+
+      // Try each candidate: repair → validate
+      resultLatex = "";
+      resultIds = candidates[0]?.ids ?? [];
+
+      for (const candidate of candidates) {
+        const tokens = decodeToTokenArray(candidate.ids, vocab);
+        const repaired = repairLatex(tokens);
+        const latex = repaired.join(" ");
+
+        if (mode === "auto" && !isCompleteExpression(repaired)) continue;
+
+        // KaTeX validation check
+        if (isValidMath(latex)) {
+          resultLatex = latex;
+          resultIds = candidate.ids;
+          break;
+        }
+      }
+
+      // All failed → return empty (doodle/non-math input)
+      if (!resultLatex && candidates.length > 0) {
+        const tokens = decodeToTokenArray(candidates[0]!.ids, vocab);
+        const repaired = repairLatex(tokens);
+        const latex = repaired.join(" ");
+        // Last resort: if even repaired version fails KaTeX, return empty
+        resultLatex = isValidMath(latex) ? latex : "";
+        resultIds = candidates[0]!.ids;
+      }
     }
+
+    encoderFeatures.dispose();
+    encoderMask.dispose();
 
     const t2 = performance.now();
 
     return {
-      latex: decodeTokenIds(resultIds, vocab),
+      latex: resultLatex,
       tokenIds: resultIds,
       encoderMs: Math.round(t1 - t0),
       decoderMs: Math.round(t2 - t1),
@@ -201,6 +299,7 @@ export class InferenceEngine {
     sos: number,
     eos: number,
     vocabSize: number,
+    allowedTokens: Set<number> | null,
   ): Promise<number[]> {
     const tokenIds: number[] = [sos];
     let repeatCount = 0;
@@ -215,12 +314,14 @@ export class InferenceEngine {
         tokenIds,
       );
       const offset = (tokenIds.length - 1) * vocabSize;
+      const logProbs = this.logSoftmax(logits, offset, vocabSize);
+      applyModeMask(logProbs, vocabSize, allowedTokens);
+
       let maxVal = -Infinity;
       let maxIdx = 0;
       for (let i = 0; i < vocabSize; i++) {
-        const v = logits[offset + i]!;
-        if (v > maxVal) {
-          maxVal = v;
+        if (logProbs[i]! > maxVal) {
+          maxVal = logProbs[i]!;
           maxIdx = i;
         }
       }
@@ -246,7 +347,8 @@ export class InferenceEngine {
     eos: number,
     vocabSize: number,
     beamWidth: number,
-  ): Promise<number[]> {
+    allowedTokens: Set<number> | null,
+  ): Promise<BeamCandidate[]> {
     let beams: Beam[] = [{ logProb: 0, ids: [sos], finished: false }];
 
     for (let step = 0; step < this.options.maxDecodeSteps; step++) {
@@ -265,6 +367,7 @@ export class InferenceEngine {
         );
         const offset = (beam.ids.length - 1) * vocabSize;
         const logProbs = this.logSoftmax(logits, offset, vocabSize);
+        applyModeMask(logProbs, vocabSize, allowedTokens);
         const topIndices = this.topK(logProbs, beamWidth * 2);
 
         for (const idx of topIndices) {
@@ -276,14 +379,13 @@ export class InferenceEngine {
               finished: true,
             });
           } else {
-            // Repeat detection: stop beam if token repeated REPEAT_LIMIT times
             const ids = beam.ids;
-            let repeatCount = 0;
+            let rCount = 0;
             for (let j = ids.length - 1; j >= 1; j--) {
-              if (ids[j] === idx) repeatCount++;
+              if (ids[j] === idx) rCount++;
               else break;
             }
-            if (repeatCount >= REPEAT_LIMIT) {
+            if (rCount >= REPEAT_LIMIT) {
               candidates.push({
                 logProb: newLogProb,
                 ids: beam.ids,
@@ -310,16 +412,16 @@ export class InferenceEngine {
     }
 
     const completed = beams.filter((b) => b.finished);
-    const best =
-      completed.length > 0
-        ? completed.sort(
-            (a, b) =>
-              b.logProb / Math.max(b.ids.length, 1) -
-              a.logProb / Math.max(a.ids.length, 1),
-          )[0]!
-        : beams[0]!;
+    const sorted = (completed.length > 0 ? completed : beams).sort(
+      (a, b) =>
+        b.logProb / Math.max(b.ids.length, 1) -
+        a.logProb / Math.max(a.ids.length, 1),
+    );
 
-    return best.ids.slice(1);
+    return sorted.slice(0, beamWidth).map((b) => ({
+      ids: b.ids.slice(1),
+      logProb: b.logProb,
+    }));
   }
 
   dispose(): void {
@@ -329,4 +431,63 @@ export class InferenceEngine {
     this.decoderSession = null;
     this.loading = null;
   }
+}
+
+function isValidMath(latex: string): boolean {
+  if (!latex.trim()) return false;
+  try {
+    // katex is loaded globally via App.vue; use dynamic import for tree-shaking
+    // For now, basic structural validation without KaTeX dependency in this module
+    return isStructurallyValid(latex);
+  } catch {
+    return false;
+  }
+}
+
+export function isStructurallyValid(latex: string): boolean {
+  const tokens = latex.split(" ").filter(Boolean);
+  if (tokens.length === 0) return false;
+
+  // Check balanced braces
+  let depth = 0;
+  for (const t of tokens) {
+    if (t === "{") depth++;
+    else if (t === "}") depth--;
+    if (depth < 0) return false;
+  }
+  if (depth !== 0) return false;
+
+  // Check \frac has 2 args, \sqrt has 1 arg
+  for (let i = 0; i < tokens.length; i++) {
+    if (tokens[i] === "\\frac") {
+      const rest = tokens.slice(i + 1);
+      if (countConsecutiveBracedGroups(rest) < 2) return false;
+    }
+    if (tokens[i] === "\\sqrt") {
+      const rest = tokens.slice(i + 1);
+      if (rest.length === 0) return false;
+    }
+  }
+
+  return true;
+}
+
+function countConsecutiveBracedGroups(tokens: string[]): number {
+  let groups = 0;
+  let i = 0;
+  while (i < tokens.length) {
+    if (tokens[i] === "{") {
+      groups++;
+      let d = 1;
+      i++;
+      while (i < tokens.length && d > 0) {
+        if (tokens[i] === "{") d++;
+        else if (tokens[i] === "}") d--;
+        i++;
+      }
+    } else {
+      break;
+    }
+  }
+  return groups;
 }

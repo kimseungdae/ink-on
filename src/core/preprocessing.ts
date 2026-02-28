@@ -24,11 +24,60 @@ const W_ALIGN = 64; // align width to multiple of 64 for conv/pool layers
 const TARGET_H = 128; // CROHME images avg ~107px height; scale content to this range
 const PAD = 16;
 
-function createCanvas(w: number, h: number): HTMLCanvasElement {
+let _rawCanvas: HTMLCanvasElement | null = null;
+let _targetCanvas: HTMLCanvasElement | null = null;
+
+function createCanvas(
+  w: number,
+  h: number,
+  cache?: "raw" | "target",
+): HTMLCanvasElement {
+  const fw = Math.max(1, Math.floor(w));
+  const fh = Math.max(1, Math.floor(h));
+  if (cache) {
+    const ref = cache === "raw" ? _rawCanvas : _targetCanvas;
+    if (ref && ref.width === fw && ref.height === fh) return ref;
+  }
   const c = document.createElement("canvas");
-  c.width = Math.max(1, Math.floor(w));
-  c.height = Math.max(1, Math.floor(h));
+  c.width = fw;
+  c.height = fh;
+  if (cache === "raw") _rawCanvas = c;
+  else if (cache === "target") _targetCanvas = c;
   return c;
+}
+
+export function resamplePoints(
+  points: StrokePoint[],
+  interval: number = 3,
+): StrokePoint[] {
+  if (points.length < 2) return points;
+  const resampled: StrokePoint[] = [points[0]!];
+  let remaining = interval;
+
+  for (let i = 1; i < points.length; i++) {
+    const prev = points[i - 1]!;
+    const curr = points[i]!;
+    const dx = curr.x - prev.x;
+    const dy = curr.y - prev.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist <= remaining) {
+      remaining -= dist;
+      continue;
+    }
+    let covered = remaining;
+    while (covered <= dist) {
+      const t = covered / dist;
+      resampled.push({
+        x: prev.x + dx * t,
+        y: prev.y + dy * t,
+      });
+      covered += interval;
+    }
+    remaining = covered - dist;
+  }
+  resampled.push(points[points.length - 1]!);
+  return resampled;
 }
 
 function computeBBox(strokes: Stroke[]): {
@@ -56,7 +105,7 @@ function renderStrokes(strokes: Stroke[]): HTMLCanvasElement {
   const bbox = computeBBox(strokes);
   const rawW = Math.max(1, Math.ceil(bbox.maxX - bbox.minX));
   const rawH = Math.max(1, Math.ceil(bbox.maxY - bbox.minY));
-  const canvas = createCanvas(rawW + PAD * 2, rawH + PAD * 2);
+  const canvas = createCanvas(rawW + PAD * 2, rawH + PAD * 2, "raw");
   const ctx = canvas.getContext("2d")!;
 
   // CROHME convention: black background, white strokes
@@ -68,13 +117,27 @@ function renderStrokes(strokes: Stroke[]): HTMLCanvasElement {
 
   for (const stroke of strokes) {
     if (stroke.points.length === 0) continue;
+    const pts = resamplePoints(stroke.points);
     ctx.beginPath();
     ctx.lineWidth = Math.max(2, stroke.lineWidth);
-    const first = stroke.points[0]!;
+    const first = pts[0]!;
     ctx.moveTo(first.x - bbox.minX + PAD, first.y - bbox.minY + PAD);
-    for (let i = 1; i < stroke.points.length; i++) {
-      const p = stroke.points[i]!;
-      ctx.lineTo(p.x - bbox.minX + PAD, p.y - bbox.minY + PAD);
+
+    if (pts.length === 2) {
+      ctx.lineTo(pts[1]!.x - bbox.minX + PAD, pts[1]!.y - bbox.minY + PAD);
+    } else if (pts.length > 2) {
+      for (let i = 1; i < pts.length - 1; i++) {
+        const mx = (pts[i]!.x + pts[i + 1]!.x) / 2 - bbox.minX + PAD;
+        const my = (pts[i]!.y + pts[i + 1]!.y) / 2 - bbox.minY + PAD;
+        ctx.quadraticCurveTo(
+          pts[i]!.x - bbox.minX + PAD,
+          pts[i]!.y - bbox.minY + PAD,
+          mx,
+          my,
+        );
+      }
+      const last = pts[pts.length - 1]!;
+      ctx.lineTo(last.x - bbox.minX + PAD, last.y - bbox.minY + PAD);
     }
     ctx.stroke();
   }
@@ -98,7 +161,7 @@ function scaleToFit(src: HTMLCanvasElement): {
     Math.max(MIN_W, Math.ceil((dw + PAD) / W_ALIGN) * W_ALIGN),
   );
 
-  const target = createCanvas(canvasW, MODEL_H);
+  const target = createCanvas(canvasW, MODEL_H, "target");
   const ctx = target.getContext("2d")!;
 
   // Black background (matching CROHME training data)

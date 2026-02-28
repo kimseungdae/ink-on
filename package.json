@@ -48,12 +48,13 @@
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
     "build:lib": "vite build --config vite.config.lib.ts && vue-tsc --project tsconfig.lib.json --declaration --emitDeclarationOnly --declarationDir dist-lib/types",
+    "test": "vitest run",
     "preview": "vite preview",
     "prepublishOnly": "npm run build:lib"
   },
   "peerDependencies": {
-    "vue": "^3.3.0",
-    "onnxruntime-web": "^1.17.0"
+    "onnxruntime-web": "^1.17.0",
+    "vue": "^3.3.0"
   },
   "peerDependenciesMeta": {
     "vue": {
@@ -68,6 +69,7 @@
     "onnxruntime-web": "^1.24.2",
     "typescript": "~5.9.3",
     "vite": "^7.3.1",
+    "vitest": "^4.0.18",
     "vue": "^3.5.25",
     "vue-tsc": "^3.1.5"
   }

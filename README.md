@@ -14,11 +14,15 @@
 
 - **100% client-side** — Runs entirely in the browser via ONNX Runtime Web (WASM/WebGPU). No server, no API key.
 - **Tiny models** — INT8 quantized encoder (3.4 MB) + decoder (4.0 MB), total **7.2 MB**.
+- **Web Worker inference** — ONNX inference runs off the main thread, keeping the UI responsive during recognition.
+- **LaTeX auto-repair** — Automatic brace balancing and `\frac`/`\sqrt` argument fixing with KaTeX runtime validation.
+- **Recognition modes** — Auto, Number (digits + basic operators), and Expression mode with vocabulary masking.
 - **Framework-agnostic core** — Use `InferenceEngine` standalone from React, Svelte, vanilla JS, or any framework.
-- **Vue 3 component** — Drop-in `<MathCanvas>` with mouse + touch support and smooth Bézier strokes.
+- **Vue 3 component** — Drop-in `<MathCanvas>` with mouse + touch support, smooth Bézier strokes, and responsive sizing.
 - **Beam search decoding** — Adaptive beam width based on device capability for quality/speed balance.
 - **IndexedDB caching** — Models are cached locally after first download; instant reload on revisit.
-- **Offline capable** — Full offline recognition once models are downloaded.
+- **PWA ready** — Installable as a standalone app with Web App Manifest.
+- **Tested** — 51 unit tests across 4 test suites with Vitest. CI/CD via GitHub Actions.
 
 ---
 
@@ -32,12 +36,11 @@
                     │
                     ▼
 ┌──────────────────────────────────────────────────────────────┐
-│  preprocessStrokes(strokes)                                  │
+│  preprocessStrokes(strokes)                     [Main Thread]│
 │  ┌────────────────────────────────────────────────────────┐  │
-│  │ 1. Render strokes on offscreen canvas (white on black) │  │
-│  │ 2. Compute bounding box + padding (16px)               │  │
+│  │ 1. Resample stroke points at uniform 3px intervals     │  │
+│  │ 2. Render with Bézier curves (white on black canvas)   │  │
 │  │ 3. Scale to height=256, dynamic width (64px-aligned)   │  │
-│  │    Width adapts to content — no wasted computation      │  │
 │  │ 4. Convert to grayscale Float32 tensor + padding mask   │  │
 │  └────────────────────────────────────────────────────────┘  │
 │  → PreprocessResult { tensor, mask, height, width }          │
@@ -45,7 +48,7 @@
                     │
                     ▼
 ┌──────────────────────────────────────────────────────────────┐
-│  InferenceEngine.recognize(input, vocab)                     │
+│  Web Worker (inference.worker.ts)                            │
 │  ┌────────────────────────────────────────────────────────┐  │
 │  │ ENCODER (CoMER — DenseNet + Transformer)               │  │
 │  │  Input:  pixel_values [1,1,H,W] + pixel_mask [1,H,W]  │  │
@@ -53,11 +56,21 @@
 │  ├────────────────────────────────────────────────────────┤  │
 │  │ DECODER (Autoregressive Transformer)                   │  │
 │  │  Greedy (beam=1) or Beam search (beam=2-3)             │  │
-│  │  With length normalization + repeat detection           │  │
-│  │  Yields to main thread every N steps (non-blocking)    │  │
-│  ├────────────────────────────────────────────────────────┤  │
-│  │ TOKENIZER                                              │  │
-│  │  Token IDs → LaTeX string via vocab.json               │  │
+│  │  Mode-based vocabulary masking (auto/number/expression) │  │
+│  │  Repeat detection + length normalization                │  │
+│  └────────────────────────────────────────────────────────┘  │
+│  → candidates: [{ ids, logProb }, ...]                       │
+└───────────────────┬──────────────────────────────────────────┘
+                    │
+                    ▼
+┌──────────────────────────────────────────────────────────────┐
+│  Post-processing + Validation                   [Main Thread]│
+│  ┌────────────────────────────────────────────────────────┐  │
+│  │ 1. decodeToTokenArray(ids, vocab)                      │  │
+│  │ 2. repairLatex(tokens) — brace balancing, arg fixing   │  │
+│  │ 3. isCompleteExpression(tokens) — completeness check   │  │
+│  │ 4. KaTeX validation — katex.renderToString(throwOnError)│  │
+│  │ 5. Select first valid candidate from beam results       │  │
 │  └────────────────────────────────────────────────────────┘  │
 │  → RecognitionResult { latex, tokenIds, encoderMs, ... }     │
 └───────────────────┬──────────────────────────────────────────┘
@@ -70,8 +83,13 @@
 
 ### Key design insights
 
+- **Off-main-thread inference** — ONNX encoder + decoder run in a Web Worker. The main thread stays responsive for drawing and UI updates during the 1-2 second inference.
+- **Beam search → validation pipeline** — The Worker returns top-N beam candidates. The main thread runs each through `repairLatex()` → `isCompleteExpression()` → KaTeX validation, selecting the first valid result.
 - **Dynamic input width** — The encoder tensor width adapts to the drawn content (aligned to 64px multiples). A simple "2" creates a 256×128 tensor instead of 256×1024, reducing encoder computation by up to 80%.
+- **Stroke resampling + Bézier** — Raw touch points are resampled at uniform 3px intervals, then rendered with quadratic Bézier curves for smooth, consistent strokes matching CROHME training data.
 - **CROHME convention** — Preprocessing follows the CROHME handwriting dataset format (white strokes on black background, top-left alignment) that the CoMER model was trained on.
+- **LaTeX auto-repair** — `repairLatex()` fixes common decoder errors: unbalanced braces, extra `\frac`/`\sqrt` arguments. Deterministic, no model dependency.
+- **Vocabulary masking** — Number mode restricts decoder output to digits, basic operators, and structural tokens, eliminating impossible symbols from beam search.
 - **Repeat detection** — Both greedy and beam decoders detect and stop on repeated tokens, preventing garbage output like "EEEEE..." from ambiguous input.
 - **IndexedDB model cache** — `fetchWithCache()` stores downloaded ONNX models in IndexedDB. Subsequent page loads skip the 7.2 MB download entirely.
 - **Multi-threaded WASM** — Uses `SharedArrayBuffer` with COOP/COEP headers for parallel WASM execution across multiple CPU cores.
@@ -289,11 +307,13 @@ new InferenceEngine(options: InferenceEngineOptions)
 
 #### Methods
 
-| Method                    | Returns                      | Description                                      |
-| ------------------------- | ---------------------------- | ------------------------------------------------ |
-| `init()`                  | `Promise<void>`              | Load and initialize ONNX sessions (lazy, cached) |
-| `recognize(input, vocab)` | `Promise<RecognitionResult>` | Run encoder + decoder inference                  |
-| `dispose()`               | `void`                       | Release ONNX sessions and free memory            |
+| Method                          | Returns                      | Description                                      |
+| ------------------------------- | ---------------------------- | ------------------------------------------------ |
+| `init()`                        | `Promise<void>`              | Load and initialize ONNX sessions (lazy, cached) |
+| `recognize(input, vocab, mode)` | `Promise<RecognitionResult>` | Run encoder + decoder inference with mode        |
+| `dispose()`                     | `void`                       | Release ONNX sessions and free memory            |
+
+`mode` is an optional `RecognitionMode` parameter: `'auto'` (default), `'number'`, or `'expression'`.
 
 ### `RecognitionResult`
 
@@ -340,6 +360,20 @@ loadVocab(url: string): Promise<Vocab>
 
 // Convert token IDs to a LaTeX string
 decodeTokenIds(ids: number[], vocab: Vocab): string
+
+// Convert token IDs to an array of LaTeX tokens (filters special tokens)
+decodeToTokenArray(ids: number[], vocab: Vocab): string[]
+```
+
+### LaTeX Repair
+
+```typescript
+// Auto-repair common decoder errors: unbalanced braces, extra \frac/\sqrt args
+repairLatex(tokens: string[]): string[]
+
+// Check if a token array forms a complete math expression
+// Returns false for lone \frac, \sqrt, \sum without required arguments
+isCompleteExpression(tokens: string[]): boolean
 ```
 
 ### Model Cache (IndexedDB)
@@ -390,8 +424,10 @@ const engine = new InferenceEngine({
 
 ## Performance Tips
 
+- **Web Worker** — The demo app runs inference in a Web Worker to avoid blocking the UI. Use `inference.worker.ts` as a reference.
 - **Debounce recognition** — Don't call `recognize()` on every stroke. Wait 1-2 seconds after the user stops drawing.
 - **Use `isStrokeMeaningful()`** — Skip inference for dots and accidental taps.
+- **Number mode** — Use `'number'` mode for digit-only input. Vocabulary masking significantly reduces decoder search space.
 - **Preload models** — Call `engine.init()` early (on mount) to overlap loading with user interaction.
 - **Model caching** — `fetchWithCache()` stores models in IndexedDB. First visit downloads 7.2 MB; revisits load instantly from cache.
 - **Call `dispose()`** — Release ONNX sessions when unmounting to free WASM memory.
@@ -427,10 +463,13 @@ This library runs [CoMER](https://github.com/Green-Wood/CoMER) (Coverage-guided 
 ### Optimizations
 
 - **INT8 quantization** — Models are quantized from FP32 to INT8, reducing size from ~100 MB to 7.2 MB with minimal accuracy loss.
+- **Web Worker inference** — ONNX inference runs off the main thread via Web Worker, preventing UI blocking during 1-2s recognition.
 - **Dynamic input width** — Tensor width adapts to content, avoiding wasted computation on padding. Simple expressions run up to 80% faster.
+- **Stroke resampling** — Raw touch points are resampled at uniform 3px intervals and rendered with Bézier curves, matching CROHME training data quality.
+- **LaTeX auto-repair** — `repairLatex()` fixes unbalanced braces and excess `\frac`/`\sqrt` arguments. KaTeX runtime validation selects the best beam candidate.
+- **Vocabulary masking** — Number mode restricts decoder logits to digits + basic operators, eliminating impossible tokens from beam search.
 - **Multi-threaded WASM** — `SharedArrayBuffer` enables parallel execution across CPU cores.
 - **IndexedDB caching** — Models are downloaded once and cached locally for instant reload.
-- **Non-blocking decoding** — Decoder yields to the main thread every few steps, keeping the UI responsive.
 
 ---
 
@@ -464,11 +503,15 @@ The ExpRate gap reflects INT8 quantization (92.8% size reduction), preprocessing
 
 - **100% 클라이언트 사이드** — ONNX Runtime Web(WASM/WebGPU)으로 브라우저에서 완전 실행. 서버 없음, API 키 없음.
 - **경량 모델** — INT8 양자화 인코더(3.4MB) + 디코더(4.0MB), 총 **7.2MB**.
+- **Web Worker 추론** — ONNX 추론이 별도 Worker 스레드에서 실행되어 인식 중 UI 블로킹 없음.
+- **LaTeX 자동 수정** — 괄호 균형 맞춤, `\frac`/`\sqrt` 인수 자동 수정 + KaTeX 런타임 검증.
+- **인식 모드** — Auto, Number(숫자+기본연산자), Expression 모드. 어휘 마스킹으로 검색 공간 축소.
 - **프레임워크 독립 코어** — React, Svelte, 바닐라 JS 등 어떤 프레임워크에서든 `InferenceEngine` 단독 사용 가능.
-- **Vue 3 컴포넌트** — 마우스 + 터치 지원 `<MathCanvas>` 드롭인 컴포넌트, 부드러운 Bézier 스트로크.
+- **Vue 3 컴포넌트** — 마우스 + 터치 지원 `<MathCanvas>` 드롭인 컴포넌트, 부드러운 Bézier 스트로크, 반응형 크기 조정.
 - **빔 서치 디코딩** — 디바이스 성능에 따른 적응형 빔 폭으로 품질/속도 균형 조절.
 - **IndexedDB 캐싱** — 첫 다운로드 후 모델을 로컬에 캐시, 재방문 시 즉시 로드.
-- **오프라인 지원** — 모델 다운로드 후 완전 오프라인 인식 가능.
+- **PWA 지원** — Web App Manifest로 독립 앱 설치 가능.
+- **테스트 완비** — Vitest 기반 51개 단위 테스트, GitHub Actions CI/CD.
 
 ## 빠른 시작
 
@@ -616,15 +659,18 @@ Cross-Origin-Embedder-Policy: require-corp
 
 ### 주요 API 요약
 
-| API                    | 설명                                     |
-| ---------------------- | ---------------------------------------- |
-| `MathCanvas`           | Vue 3 캔버스 컴포넌트 (마우스/터치 입력) |
-| `InferenceEngine`      | ONNX 추론 엔진 (인코더+디코더)           |
-| `preprocessStrokes()`  | 스트로크 → 정규화된 텐서 변환            |
-| `isStrokeMeaningful()` | 의미 있는 입력인지 검증 (점/탭 필터링)   |
-| `loadVocab()`          | 어휘 JSON 로드 (캐싱됨)                  |
-| `decodeTokenIds()`     | 토큰 ID → LaTeX 문자열 변환              |
-| `fetchWithCache()`     | IndexedDB 캐싱 포함 모델 다운로드        |
+| API                      | 설명                                     |
+| ------------------------ | ---------------------------------------- |
+| `MathCanvas`             | Vue 3 캔버스 컴포넌트 (마우스/터치 입력) |
+| `InferenceEngine`        | ONNX 추론 엔진 (인코더+디코더)           |
+| `preprocessStrokes()`    | 스트로크 → 정규화된 텐서 변환            |
+| `isStrokeMeaningful()`   | 의미 있는 입력인지 검증 (점/탭 필터링)   |
+| `loadVocab()`            | 어휘 JSON 로드 (캐싱됨)                  |
+| `decodeTokenIds()`       | 토큰 ID → LaTeX 문자열 변환              |
+| `decodeToTokenArray()`   | 토큰 ID → LaTeX 토큰 배열 변환           |
+| `repairLatex()`          | LaTeX 자동 수정 (괄호 균형, 인수 수정)   |
+| `isCompleteExpression()` | 수식 완결성 검사                         |
+| `fetchWithCache()`       | IndexedDB 캐싱 포함 모델 다운로드        |
 
 ## 작동 원리
 
@@ -641,10 +687,13 @@ Cross-Origin-Embedder-Policy: require-corp
 ### 최적화
 
 - **INT8 양자화** — FP32에서 INT8로 양자화하여 모델 크기를 ~100MB에서 7.2MB로 축소, 정확도 손실 최소화.
+- **Web Worker 추론** — ONNX 추론이 별도 Worker 스레드에서 실행되어 1-2초 인식 중 UI 블로킹 방지.
 - **동적 입력 너비** — 텐서 너비가 콘텐츠에 맞게 조정되어 패딩에 대한 불필요한 연산을 제거. 단순 수식은 최대 80% 더 빠르게 실행.
+- **스트로크 리샘플링** — 원시 터치 포인트를 균일한 3px 간격으로 리샘플링하고 Bézier 곡선으로 렌더링하여 CROHME 학습 데이터 품질과 일치.
+- **LaTeX 자동 수정** — `repairLatex()`가 불균형 괄호와 초과 `\frac`/`\sqrt` 인수를 수정. KaTeX 런타임 검증으로 최적 빔 후보 선택.
+- **어휘 마스킹** — Number 모드에서 디코더 로짓을 숫자+기본연산자로 제한하여 불가능한 토큰을 빔 서치에서 제거.
 - **멀티스레드 WASM** — `SharedArrayBuffer`로 CPU 코어 간 병렬 실행 가능.
 - **IndexedDB 캐싱** — 모델을 한 번 다운로드 후 로컬에 캐시하여 즉시 재로드.
-- **논블로킹 디코딩** — 디코더가 몇 스텝마다 메인 스레드에 양보하여 UI 응답성 유지.
 
 ## 벤치마크
 

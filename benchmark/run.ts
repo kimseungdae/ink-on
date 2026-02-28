@@ -20,6 +20,10 @@ function loadVocab(path: string): Vocab {
 }
 
 function decodeTokenIds(ids: number[], vocab: Vocab): string {
+  return decodeToTokenArray(ids, vocab).join(" ");
+}
+
+function decodeToTokenArray(ids: number[], vocab: Vocab): string[] {
   const { sos, eos, pad } = vocab.special_tokens;
   const skip = new Set([sos, eos, pad]);
   const words: string[] = [];
@@ -28,7 +32,124 @@ function decodeTokenIds(ids: number[], vocab: Vocab): string {
     const w = vocab.idx2word[String(id)];
     if (w !== undefined) words.push(w);
   }
-  return words.join(" ");
+  return words;
+}
+
+function repairLatex(tokens: string[]): string[] {
+  let result = [...tokens];
+  result = _balanceBraces(result);
+  result = _fixFracArgs(result);
+  result = _fixSqrtArgs(result);
+  return result;
+}
+
+function _balanceBraces(tokens: string[]): string[] {
+  const result: string[] = [];
+  let depth = 0;
+  for (const t of tokens) {
+    if (t === "{") {
+      depth++;
+      result.push(t);
+    } else if (t === "}") {
+      if (depth > 0) {
+        depth--;
+        result.push(t);
+      }
+    } else {
+      result.push(t);
+    }
+  }
+  while (depth > 0) {
+    result.push("}");
+    depth--;
+  }
+  return result;
+}
+
+function _fixFracArgs(tokens: string[]): string[] {
+  const result: string[] = [];
+  let i = 0;
+  while (i < tokens.length) {
+    if (tokens[i] === "\\frac") {
+      result.push(tokens[i]!);
+      i++;
+      let groups = 0;
+      while (i < tokens.length && groups < 2) {
+        if (tokens[i] === "{") {
+          groups++;
+          let d = 1;
+          result.push(tokens[i]!);
+          i++;
+          while (i < tokens.length && d > 0) {
+            if (tokens[i] === "{") d++;
+            else if (tokens[i] === "}") d--;
+            result.push(tokens[i]!);
+            i++;
+          }
+        } else {
+          result.push(tokens[i]!);
+          i++;
+          groups++;
+        }
+      }
+      while (i < tokens.length && tokens[i] === "{") {
+        let d = 1;
+        i++;
+        while (i < tokens.length && d > 0) {
+          if (tokens[i] === "{") d++;
+          else if (tokens[i] === "}") d--;
+          i++;
+        }
+      }
+    } else {
+      result.push(tokens[i]!);
+      i++;
+    }
+  }
+  return result;
+}
+
+function _fixSqrtArgs(tokens: string[]): string[] {
+  const result: string[] = [];
+  let i = 0;
+  while (i < tokens.length) {
+    if (tokens[i] === "\\sqrt") {
+      result.push(tokens[i]!);
+      i++;
+      let groups = 0;
+      while (i < tokens.length && groups < 1) {
+        if (tokens[i] === "{") {
+          groups++;
+          let d = 1;
+          result.push(tokens[i]!);
+          i++;
+          while (i < tokens.length && d > 0) {
+            if (tokens[i] === "{") d++;
+            else if (tokens[i] === "}") d--;
+            result.push(tokens[i]!);
+            i++;
+          }
+        } else {
+          result.push(tokens[i]!);
+          i++;
+          groups++;
+        }
+      }
+      while (i < tokens.length && tokens[i] === "{") {
+        let d = 1;
+        i++;
+        while (i < tokens.length && d > 0) {
+          if (tokens[i] === "{") d++;
+          else if (tokens[i] === "}") d--;
+          i++;
+        }
+      }
+    } else {
+      result.push(tokens[i]!);
+      i++;
+    }
+  }
+  return result;
 }
 
 // --- LaTeX Tokenizer (for GT normalization) ---
@@ -444,7 +565,9 @@ async function main() {
           ? await greedyDecode(decSession, features, mask, vocab)
           : await beamDecode(decSession, features, mask, vocab, beamWidth);
 
-      const predicted = decodeTokenIds(tokenIds, vocab);
+      const tokens = decodeToTokenArray(tokenIds, vocab);
+      const repaired = repairLatex(tokens);
+      const predicted = repaired.join(" ");
       const gtNorm = normalizeLatex(sample.groundTruth, vocabKeys);
       const predNorm = normalizePrediction(predicted);
 

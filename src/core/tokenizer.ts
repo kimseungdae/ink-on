@@ -15,6 +15,10 @@ export async function loadVocab(url: string): Promise<Vocab> {
 }
 
 export function decodeTokenIds(ids: number[], vocab: Vocab): string {
+  return decodeToTokenArray(ids, vocab).join(" ");
+}
+
+export function decodeToTokenArray(ids: number[], vocab: Vocab): string[] {
   const { sos, eos, pad } = vocab.special_tokens;
   const skip = new Set([sos, eos, pad]);
   const words: string[] = [];
@@ -23,5 +27,5 @@ export function decodeTokenIds(ids: number[], vocab: Vocab): string {
     const w = vocab.idx2word[String(id)];
     if (w !== undefined) words.push(w);
   }
-  return words.join(" ");
+  return words;
 }

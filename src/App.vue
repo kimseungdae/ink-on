@@ -3,8 +3,8 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
 import MathCanvas from './components/MathCanvas.vue';
-import { InferenceEngine, preprocessStrokes, isStrokeMeaningful, loadVocab } from './core';
-import type { Stroke, RecognitionResult, Vocab } from './core';
+import { preprocessStrokes, isStrokeMeaningful, loadVocab, decodeToTokenArray, repairLatex, isCompleteExpression } from './core';
+import type { Stroke, RecognitionResult, RecognitionMode, Vocab } from './core';
 
 const canvasRef = ref<InstanceType<typeof MathCanvas> | null>(null);
 const result = ref<RecognitionResult | null>(null);
@@ -13,11 +13,23 @@ const isReady = ref(false);
 const isRecognizing = ref(false);
 const loadProgress = ref('');
 const lowMemWarning = ref(false);
+const recognitionMode = ref<RecognitionMode>('auto');
+const canvasWidth = ref(700);
+const canvasHeight = ref(300);
 
-let engine: InferenceEngine | null = null;
+let worker: Worker | null = null;
 let vocab: Vocab | null = null;
 let idleTimer: ReturnType<typeof setTimeout> | null = null;
+let recognitionId = 0;
+let workerMsgId = 0;
+let beamWidth = 3;
 const IDLE_MS = 1200;
+const MAX_DECODE_STEPS = 50;
+
+const pendingResolvers = new Map<number, {
+  resolve: (val: RecognitionResult) => void;
+  reject: (err: Error) => void;
+}>();
 
 const renderedMath = computed(() => {
   if (!result.value?.latex) return '';
@@ -31,25 +43,109 @@ const renderedMath = computed(() => {
   }
 });
 
+function isKaTeXValid(latex: string): boolean {
+  if (!latex.trim()) return false;
+  try {
+    katex.renderToString(latex, { throwOnError: true });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function selectBestCandidate(
+  candidates: { ids: number[]; logProb: number }[],
+  mode: RecognitionMode,
+): { latex: string; tokenIds: number[] } {
+  for (const c of candidates) {
+    const tokens = decodeToTokenArray(c.ids, vocab!);
+    const repaired = repairLatex(tokens);
+    const latex = repaired.join(' ');
+    if (mode === 'auto' && !isCompleteExpression(repaired)) continue;
+    if (isKaTeXValid(latex)) return { latex, tokenIds: c.ids };
+  }
+  // Fallback: try first candidate with repair only
+  if (candidates.length > 0) {
+    const tokens = decodeToTokenArray(candidates[0]!.ids, vocab!);
+    const repaired = repairLatex(tokens);
+    const latex = repaired.join(' ');
+    if (isKaTeXValid(latex)) return { latex, tokenIds: candidates[0]!.ids };
+  }
+  return { latex: '', tokenIds: [] };
+}
+
+function handleWorkerMessage(e: MessageEvent) {
+  const msg = e.data;
+  if (msg.type === 'init-done') return;
+  if (msg.type === 'init-error') return;
+
+  const resolver = pendingResolvers.get(msg.id);
+  if (!resolver) return;
+  pendingResolvers.delete(msg.id);
+
+  if (msg.type === 'recognize-error') {
+    resolver.reject(new Error(msg.error));
+    return;
+  }
+
+  const mode = recognitionMode.value;
+  const { latex, tokenIds } = selectBestCandidate(msg.candidates, mode);
+
+  resolver.resolve({
+    latex,
+    tokenIds,
+    encoderMs: msg.encoderMs,
+    decoderMs: msg.decoderMs,
+    totalMs: msg.totalMs,
+  });
+}
+
+function updateCanvasSize() {
+  const maxW = 700;
+  const w = Math.min(maxW, window.innerWidth - 32);
+  canvasWidth.value = w;
+  canvasHeight.value = Math.round(w * 300 / 700);
+}
+
 onMounted(async () => {
+  updateCanvasSize();
+  window.addEventListener('resize', updateCanvasSize);
+
   try {
     loadProgress.value = 'Loading vocabulary...';
     vocab = await loadVocab('/models/comer/vocab.json');
 
-    // Adaptive beam width based on device capability
     const cores = navigator.hardwareConcurrency || 2;
     const mem = (navigator as unknown as { deviceMemory?: number }).deviceMemory || 4;
-    const beamWidth = mem <= 2 || cores <= 2 ? 1 : cores <= 4 ? 2 : 3;
+    beamWidth = mem <= 2 || cores <= 2 ? 1 : cores <= 4 ? 2 : 3;
     if (mem <= 2) lowMemWarning.value = true;
 
     loadProgress.value = `Loading ONNX models (beam=${beamWidth})...`;
-    engine = new InferenceEngine({
-      encoderUrl: '/models/comer/encoder_int8.onnx',
-      decoderUrl: '/models/comer/decoder_int8.onnx',
-      beamWidth,
-      executionProvider: 'wasm',
+
+    worker = new Worker(
+      new URL('./core/inference.worker.ts', import.meta.url),
+      { type: 'module' },
+    );
+    worker.onmessage = handleWorkerMessage;
+
+    await new Promise<void>((resolve, reject) => {
+      const onMsg = (e: MessageEvent) => {
+        if (e.data.type === 'init-done') {
+          worker!.removeEventListener('message', onMsg);
+          resolve();
+        } else if (e.data.type === 'init-error') {
+          worker!.removeEventListener('message', onMsg);
+          reject(new Error(e.data.error));
+        }
+      };
+      worker!.addEventListener('message', onMsg);
+      worker!.postMessage({
+        type: 'init',
+        encoderUrl: '/models/comer/encoder_int8.onnx',
+        decoderUrl: '/models/comer/decoder_int8.onnx',
+        executionProvider: 'wasm',
+      });
     });
-    await engine.init();
 
     isReady.value = true;
     status.value = 'Draw a math expression';
@@ -59,16 +155,47 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  engine?.dispose();
+  window.removeEventListener('resize', updateCanvasSize);
+  worker?.terminate();
+  worker = null;
 });
 
+function recognizeViaWorker(input: {
+  tensor: Float32Array;
+  mask: Uint8Array;
+  height: number;
+  width: number;
+  maskHeight: number;
+  maskWidth: number;
+}): Promise<RecognitionResult> {
+  const id = ++workerMsgId;
+  return new Promise((resolve, reject) => {
+    pendingResolvers.set(id, { resolve, reject });
+    worker!.postMessage({
+      type: 'recognize',
+      id,
+      tensor: input.tensor,
+      mask: input.mask,
+      height: input.height,
+      width: input.width,
+      maskHeight: input.maskHeight,
+      maskWidth: input.maskWidth,
+      vocabSize: vocab!.vocab_size,
+      sos: vocab!.special_tokens.sos,
+      eos: vocab!.special_tokens.eos,
+      beamWidth,
+      maxSteps: MAX_DECODE_STEPS,
+      mode: recognitionMode.value,
+    });
+  });
+}
+
 async function onStrokesChange(strokes: Stroke[]) {
-  if (!engine || !vocab || strokes.length === 0) {
+  if (!worker || !vocab || strokes.length === 0) {
     result.value = null;
     return;
   }
 
-  // Skip tiny strokes (dots, accidental taps)
   if (!isStrokeMeaningful(strokes)) {
     result.value = null;
     return;
@@ -76,13 +203,17 @@ async function onStrokesChange(strokes: Stroke[]) {
 
   if (idleTimer) clearTimeout(idleTimer);
   status.value = 'Waiting...';
+  const currentId = ++recognitionId;
+
   idleTimer = setTimeout(async () => {
     isRecognizing.value = true;
     status.value = 'Recognizing...';
     try {
       const input = preprocessStrokes(strokes);
-      const res = await engine!.recognize(input, vocab!);
-      // Ignore empty or garbage results
+      const res = await recognizeViaWorker(input);
+
+      if (currentId !== recognitionId) return;
+
       if (!res.latex.trim() || res.tokenIds.length === 0) {
         result.value = null;
         status.value = 'Draw a math expression';
@@ -91,9 +222,12 @@ async function onStrokesChange(strokes: Stroke[]) {
         status.value = `${res.totalMs}ms (enc ${res.encoderMs}ms + dec ${res.decoderMs}ms)`;
       }
     } catch (err) {
+      if (currentId !== recognitionId) return;
       status.value = `Error: ${err}`;
     } finally {
-      isRecognizing.value = false;
+      if (currentId === recognitionId) {
+        isRecognizing.value = false;
+      }
     }
   }, IDLE_MS);
 }
@@ -129,8 +263,8 @@ function handleCopy() {
     <div class="canvas-wrap" :class="{ recognizing: isRecognizing }">
       <MathCanvas
         ref="canvasRef"
-        :width="700"
-        :height="300"
+        :width="canvasWidth"
+        :height="canvasHeight"
         :line-width="3"
         @strokes-change="onStrokesChange"
       />
@@ -143,6 +277,11 @@ function handleCopy() {
     <div class="toolbar">
       <button @click="handleUndo" :disabled="!isReady">Undo</button>
       <button @click="handleClear" :disabled="!isReady">Clear</button>
+      <select v-model="recognitionMode" class="mode-select" :disabled="!isReady">
+        <option value="auto">Auto</option>
+        <option value="number">123</option>
+        <option value="expression">&sum;&int;</option>
+      </select>
       <span class="status" :class="{ active: isRecognizing }">{{ status }}</span>
     </div>
 
@@ -238,6 +377,16 @@ button {
 }
 button:hover:not(:disabled) { background: #eee; }
 button:disabled { opacity: 0.4; cursor: default; }
+
+.mode-select {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  background: #fafafa;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.mode-select:disabled { opacity: 0.4; cursor: default; }
 
 .status {
   margin-left: auto;

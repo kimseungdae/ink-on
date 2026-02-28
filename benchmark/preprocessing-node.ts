@@ -26,6 +26,40 @@ const W_ALIGN = 64;
 const TARGET_H = 128;
 const PAD = 16;
 
+function resamplePoints(
+  points: StrokePoint[],
+  interval: number = 3,
+): StrokePoint[] {
+  if (points.length < 2) return points;
+  const resampled: StrokePoint[] = [points[0]!];
+  let remaining = interval;
+
+  for (let i = 1; i < points.length; i++) {
+    const prev = points[i - 1]!;
+    const curr = points[i]!;
+    const dx = curr.x - prev.x;
+    const dy = curr.y - prev.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist <= remaining) {
+      remaining -= dist;
+      continue;
+    }
+    let covered = remaining;
+    while (covered <= dist) {
+      const t = covered / dist;
+      resampled.push({
+        x: prev.x + dx * t,
+        y: prev.y + dy * t,
+      });
+      covered += interval;
+    }
+    remaining = covered - dist;
+  }
+  resampled.push(points[points.length - 1]!);
+  return resampled;
+}
+
 function computeBBox(strokes: Stroke[]) {
   let minX = Infinity,
     minY = Infinity,
@@ -57,13 +91,27 @@ function renderStrokes(strokes: Stroke[]): Canvas {
 
   for (const stroke of strokes) {
     if (stroke.points.length === 0) continue;
+    const pts = resamplePoints(stroke.points);
     ctx.beginPath();
     ctx.lineWidth = Math.max(2, stroke.lineWidth);
-    const first = stroke.points[0]!;
+    const first = pts[0]!;
     ctx.moveTo(first.x - bbox.minX + PAD, first.y - bbox.minY + PAD);
-    for (let i = 1; i < stroke.points.length; i++) {
-      const p = stroke.points[i]!;
-      ctx.lineTo(p.x - bbox.minX + PAD, p.y - bbox.minY + PAD);
+
+    if (pts.length === 2) {
+      ctx.lineTo(pts[1]!.x - bbox.minX + PAD, pts[1]!.y - bbox.minY + PAD);
+    } else if (pts.length > 2) {
+      for (let i = 1; i < pts.length - 1; i++) {
+        const mx = (pts[i]!.x + pts[i + 1]!.x) / 2 - bbox.minX + PAD;
+        const my = (pts[i]!.y + pts[i + 1]!.y) / 2 - bbox.minY + PAD;
+        ctx.quadraticCurveTo(
+          pts[i]!.x - bbox.minX + PAD,
+          pts[i]!.y - bbox.minY + PAD,
+          mx,
+          my,
+        );
+      }
+      const last = pts[pts.length - 1]!;
+      ctx.lineTo(last.x - bbox.minX + PAD, last.y - bbox.minY + PAD);
     }
     ctx.stroke();
   }

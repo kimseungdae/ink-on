@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, watch, onMounted, onUnmounted } from 'vue';
 import type { Stroke, StrokePoint } from '../core/preprocessing';
 
 const props = withDefaults(defineProps<{
@@ -130,6 +130,10 @@ function undo() {
 }
 
 defineExpose({ clear, undo, strokes });
+
+watch(() => [props.width, props.height], () => {
+  redraw();
+});
 
 onMounted(() => {
   const canvas = canvasRef.value;
