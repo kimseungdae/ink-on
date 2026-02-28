@@ -1,0 +1,14 @@
+{
+  "dataset": "CROHME 2014 Test",
+  "totalSamples": 986,
+  "beamWidth": 3,
+  "expRate": "36.41",
+  "expRate1": "53.25",
+  "expRate2": "65.82",
+  "correct": 359,
+  "edit1": 525,
+  "edit2": 649,
+  "vocabMismatch": 125,
+  "elapsedSeconds": 288.1,
+  "avgTimePerSample": 0.29
+}

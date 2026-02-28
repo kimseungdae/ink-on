@@ -434,6 +434,19 @@ This library runs [CoMER](https://github.com/Green-Wood/CoMER) (Coverage-guided 
 
 ---
 
+## Benchmark
+
+Evaluated on the [CROHME 2014](https://www.isical.ac.in/~crohme/) test set (986 handwritten math expressions), end-to-end from InkML strokes through ink-on's full pipeline.
+
+| Model                     | ExpRate    | ≤1 edit    | ≤2 edits   | Size       |
+| ------------------------- | ---------- | ---------- | ---------- | ---------- |
+| CoMER paper (FP32)        | 59.33%     | —          | —          | ~100 MB    |
+| **ink-on (INT8, beam=3)** | **36.41%** | **53.25%** | **65.82%** | **7.2 MB** |
+
+The ExpRate gap reflects INT8 quantization (92.8% size reduction), preprocessing differences, and limited vocabulary (113 tokens). See [benchmark/](./benchmark/) for reproduction scripts.
+
+---
+
 ## License
 
 [Apache License 2.0](./LICENSE) — Copyright 2025 kimseungdae
@@ -632,6 +645,17 @@ Cross-Origin-Embedder-Policy: require-corp
 - **멀티스레드 WASM** — `SharedArrayBuffer`로 CPU 코어 간 병렬 실행 가능.
 - **IndexedDB 캐싱** — 모델을 한 번 다운로드 후 로컬에 캐시하여 즉시 재로드.
 - **논블로킹 디코딩** — 디코더가 몇 스텝마다 메인 스레드에 양보하여 UI 응답성 유지.
+
+## 벤치마크
+
+[CROHME 2014](https://www.isical.ac.in/~crohme/) 테스트셋(986개 손글씨 수학 수식)에서 ink-on 전체 파이프라인을 end-to-end로 평가했습니다.
+
+| 모델                      | ExpRate    | ≤1 edit    | ≤2 edits   | 크기       |
+| ------------------------- | ---------- | ---------- | ---------- | ---------- |
+| CoMER 논문 (FP32)         | 59.33%     | —          | —          | ~100 MB    |
+| **ink-on (INT8, beam=3)** | **36.41%** | **53.25%** | **65.82%** | **7.2 MB** |
+
+ExpRate 차이는 INT8 양자화(92.8% 크기 축소), 전처리 차이, 제한된 어휘(113개 토큰)의 복합 효과입니다. 재현 스크립트는 [benchmark/](./benchmark/)를 참조하세요.
 
 ## 라이선스
 

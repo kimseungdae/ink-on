@@ -1,0 +1,602 @@
+[
+  {
+    "id": "18_em_11",
+    "gt": "q _ { t } = 2 q",
+    "pred": "q _ { t } = 2 9",
+    "dist": 1
+  },
+  {
+    "id": "18_em_12",
+    "gt": "\\frac { p e ^ t } { 1 - ( 1 - p ) e ^ t } \\ !",
+    "pred": "\\frac { p e ^ { t } { } } { 1 - ( 1 - p ) e ^ { t } }",
+    "dist": 7
+  },
+  {
+    "id": "18_em_15",
+    "gt": "k = 1 0 0 0 0 0 0 0 0 0",
+    "pred": "k = 1 0 0 0",
+    "dist": 6
+  },
+  {
+    "id": "18_em_16",
+    "gt": "m \\geq 2",
+    "pred": "m \\sum 2",
+    "dist": 1
+  },
+  {
+    "id": "18_em_2",
+    "gt": "C _ { 1 } y _ { 1 } ^ { ( n - 1 ) } + C _ { 2 } y _ { 2 } ^ { ( n - 1 ) } + \\ldots + C _ { n } y _ { n } ^ { ( n - 1 ) } = 0",
+    "pred": "c , y _ { 1 } ^ { ( n - 1 ) } + ( 2 { y _ { 2 } ^ { n - 1 ) } + ( n y _ { n } ^ { ( n - 1 ) } = 0",
+    "dist": 16
+  },
+  {
+    "id": "18_em_20",
+    "gt": "\\frac { 1 } { p } + \\frac { 1 } { q } = 1 \\ !",
+    "pred": "\\frac { 1 } { p } + \\frac { 1 } { q } = 1",
+    "dist": 2
+  },
+  {
+    "id": "18_em_21",
+    "gt": "1 0 1 1 \\ 1 1 1 0 \\ 1 1 1 0 \\ 0 1 0 1 _ { 2 }",
+    "pred": "1 0 1 1 1",
+    "dist": 18
+  },
+  {
+    "id": "18_em_22",
+    "gt": "p _ { 1 } ^ { \\gamma _ { 1 } } p _ { 2 } ^ { \\gamma _ { 2 } } \\cdots p _ { n } ^ { \\gamma _ { n } }",
+    "pred": "p _ { 1 } ^ { \\gamma _ { 1 } } p _ { 2 } ^ { \\gamma _ { 2 } } ^ { \\gamma _ { n } }",
+    "dist": 6
+  },
+  {
+    "id": "18_em_3",
+    "gt": "q _ { 1 } , q _ { 2 } , \\ldots , q _ { m }",
+    "pred": "q _ { 1 } , q _ { 2 } , q _ { n } , q _ { n }",
+    "dist": 6
+  },
+  {
+    "id": "18_em_4",
+    "gt": "e ^ { - n } \\ !",
+    "pred": "e ^ { - n }",
+    "dist": 2
+  },
+  {
+    "id": "18_em_5",
+    "gt": "\\int g = \\lim _ { n \\rightarrow \\infty } \\int g _ { n } \\ !",
+    "pred": "\\int g = \\lim \\limits _ { n \\rightarrow \\infty } \\int g _ { n }",
+    "dist": 3
+  },
+  {
+    "id": "18_em_6",
+    "gt": "g ( b ) - g ( a ) = b - a",
+    "pred": "f ( b ) - g ( a ) = b - a",
+    "dist": 1
+  },
+  {
+    "id": "18_em_8",
+    "gt": "x _ { L L L } \\leq x _ { L L }",
+    "pred": "x _ { L L L } \\leq x _ { L L } }",
+    "dist": 1
+  },
+  {
+    "id": "20_em_25",
+    "gt": "\\sin \\left ( x + y \\right ) = \\sin x \\cos y + \\cos x \\sin y",
+    "pred": "\\sin ( x + y ) = \\sin x \\cos y + \\cos y",
+    "dist": 4
+  },
+  {
+    "id": "20_em_26",
+    "gt": "\\frac { 9 } { 9 + \\sqrt { 9 } }",
+    "pred": "\\frac { g } { g + \\sqrt { 9 } }",
+    "dist": 2
+  },
+  {
+    "id": "20_em_27",
+    "gt": "R _ { o } = \\frac { \\left ( \\frac { \\beta + 1 } { \\beta } \\right ) r _ { e } + \\left ( \\beta + 2 + \\frac { 2 } { \\beta } \\right ) r _ { o } } { 2 + \\frac { 2 } { $ } { \\beta } }",
+    "pred": "k _ { 0 } = \\frac { ( \\frac { p + 1 } { 1 ^ { p } } ) e + ( p + 2 + \\frac { 2 } { 2 } ) ^ { 2 } } { 2 } }",
+    "dist": 29
+  },
+  {
+    "id": "20_em_28",
+    "gt": "1 . 3 7 9 1 9 4 1 7 1",
+    "pred": "1 . 3 7 9 / 9 4 1 7 1",
+    "dist": 1
+  },
+  {
+    "id": "20_em_29",
+    "gt": "( - \\infty , \\infty ) \\ !",
+    "pred": "( - \\infty , \\infty )",
+    "dist": 2
+  },
+  {
+    "id": "20_em_30",
+    "gt": "I _ { \\mathrm } { S }",
+    "pred": "I _ { s }",
+    "dist": 4
+  },
+  {
+    "id": "20_em_31",
+    "gt": "X X ^ { - 1 } = X ^ { - 1 } X = I",
+    "pred": "x x ^ { - 1 } = x ^ { - 1 } x = 5",
+    "dist": 5
+  },
+  {
+    "id": "20_em_33",
+    "gt": "R _ { \\mathrm } { a } = \\frac { R _ 1 R _ 2 + R _ 2 R _ 3 + R _ 3 R _ 1 } { R _ 2 }",
+    "pred": "R _ { a } = \\frac { R _ { 2 } { + } R _ { 2 } R _ { 3 } + R _ { 1 } } { R _ { 2 } } { R _ { 2 } }",
+    "dist": 22
+  },
+  {
+    "id": "20_em_35",
+    "gt": "\\mu \\geq 0",
+    "pred": "M \\geq 0",
+    "dist": 1
+  },
+  {
+    "id": "20_em_37",
+    "gt": "\\frac { 3 \\times 3 ^ 2 } { 2 } + \\frac { 5 \\times ( - 5 ) ^ 2 } { 2 } = \\frac { 3 \\times { v _ 1 } { ^ } 2 } { 2 } + \\frac { 5 \\times { v _ 2 } { ^ } 2 } { 2 }",
+    "pred": "\\frac { 3 x 3 ^ { 2 } { } } { 2 } + \\frac { 5 x ( - 5 ) ^ { 2 } { } } { 2 } = \\frac { 3 x ^ { 2 } { } } { 2 } + \\frac { 5 x ^ {",
+    "dist": 29
+  },
+  {
+    "id": "20_em_38",
+    "gt": "Y _ { t + 1 }",
+    "pred": "Y _ { t + H }",
+    "dist": 1
+  },
+  {
+    "id": "20_em_40",
+    "gt": "\\sqrt { 4 x ^ 5 + x }",
+    "pred": "\\sqrt { 4 x ^ { 5 } + x }",
+    "dist": 2
+  },
+  {
+    "id": "20_em_41",
+    "gt": "9 / 5",
+    "pred": "q , s",
+    "dist": 3
+  },
+  {
+    "id": "20_em_43",
+    "gt": "( 6 4 8 + 6 4 8 ) ^ { \\frac } { 1 } { 4 } + 8",
+    "pred": "( 6 4 8 + 6 4 8 ) ^ { \\frac { 1 } { 4 } + 8",
+    "dist": 1
+  },
+  {
+    "id": "20_em_45",
+    "gt": "\\sqrt { C _ n }",
+    "pred": "\\sqrt { C _ { n } }",
+    "dist": 2
+  },
+  {
+    "id": "20_em_46",
+    "gt": "\\frac { d _ 1 - 2 } { d _ 1 } \\ ; \\frac { d _ 2 } { d _ 2 + 2 } \\ !",
+    "pred": "\\frac { d _ { 1 - 2 } { } } { d _ { 1 } } \\frac { d _ { 2 } { } } { d _ { 2 + z } }",
+    "dist": 15
+  },
+  {
+    "id": "20_em_48",
+    "gt": "f ( 1 . 9 9 ) = 3 . 9 9 2 1 9 2 0 1",
+    "pred": "f ( 1 , 9 ) = 3 \\cdot 9 9 2 / 9 2 0 1",
+    "dist": 4
+  },
+  {
+    "id": "23_em_51",
+    "gt": "n = p _ { 1 } ^ { e _ { 1 } } p _ { 2 } ^ { e _ { 2 } } \\ldots p _ { m } ^ { e _ { m } }",
+    "pred": "n = p _ { 1 } ^ { e ^ { t } f _ { 2 } ^ { 2 } }",
+    "dist": 21
+  },
+  {
+    "id": "23_em_52",
+    "gt": "2 p",
+    "pred": "2 b",
+    "dist": 1
+  },
+  {
+    "id": "23_em_56",
+    "gt": "9 + 2",
+    "pred": "q + 2",
+    "dist": 1
+  },
+  {
+    "id": "23_em_57",
+    "gt": "\\sqrt { 3 ^ 2 + 2 ^ 2 } = \\sqrt { 1 3 }",
+    "pred": "\\sqrt { 3 ^ { 2 } + 2 ^ { 2 } } = \\sqrt { 1 3 }",
+    "dist": 4
+  },
+  {
+    "id": "23_em_59",
+    "gt": "\\sum _ { r = 1 } ^ { n } a r ^ { b } = a \\sum _ { r = 1 } ^ { n } r ^ { b }",
+    "pred": "\\sum \\limits _ { \\gamma = 1 } ^ { n } a ^ { b } = a \\sum \\limits _ { n = 1 } ^ { n } x ^ { b }",
+    "dist": 6
+  },
+  {
+    "id": "23_em_60",
+    "gt": "\\frac { 2 } { 3 } + \\frac { 1 } { 9 } = ( \\frac { 7 } { 9 } )",
+    "pred": "\\frac { 2 } { 3 } + \\frac { 1 } { q } = ( \\frac { 7 } { q } )",
+    "dist": 2
+  },
+  {
+    "id": "23_em_61",
+    "gt": "\\cos 2 \\alpha",
+    "pred": "c 0 5 2 \\alpha",
+    "dist": 3
+  },
+  {
+    "id": "23_em_63",
+    "gt": "F \\ = \\sqrt { F _ x ^ 2 + F _ y ^ 2 }",
+    "pred": "F = \\sqrt { F _ { x } ^ { 2 } + F _ { y } ^ { 2 } }",
+    "dist": 9
+  },
+  {
+    "id": "23_em_64",
+    "gt": "\\log _ { e } x",
+    "pred": "\\log x",
+    "dist": 4
+  },
+  {
+    "id": "23_em_66",
+    "gt": "z ^ { 3 } + z = z",
+    "pred": "z ^ { 3 } + z = 2",
+    "dist": 1
+  },
+  {
+    "id": "23_em_67",
+    "gt": "2 \\left ( ( x + 2 ) ^ { 2 } - 4 + 1 \\right )",
+    "pred": "2 ( ( x + 2 ) ^ { 2 } - 4 + 1 )",
+    "dist": 2
+  },
+  {
+    "id": "23_em_68",
+    "gt": "\\frac { q - p } { \\sqrt { p q } }",
+    "pred": "\\frac { a - b } { \\sqrt { p q } }",
+    "dist": 2
+  },
+  {
+    "id": "23_em_69",
+    "gt": "X \\leq 1 5",
+    "pred": "x \\leq 1 5",
+    "dist": 1
+  },
+  {
+    "id": "23_em_71",
+    "gt": "c T ^ { \\prime }",
+    "pred": "c T ^ { l }",
+    "dist": 1
+  },
+  {
+    "id": "23_em_72",
+    "gt": "\\sum _ { i = 1 } ^ { n } x _ { n } = \\sum _ { i = 1 } ^ { n } y _ { n }",
+    "pred": "\\sum \\limits _ { i = 1 } ^ { n } x _ { n } = \\sum \\limits _ { i = 1 } ^ { n } y _ { n }",
+    "dist": 2
+  },
+  {
+    "id": "23_em_73",
+    "gt": "B _ { m + 1 }",
+    "pred": "\\sqrt { B _ { m + 1 } }",
+    "dist": 3
+  },
+  {
+    "id": "26_em_77",
+    "gt": "x ^ { i } e _ { i } = \\sum _ { i } x ^ { i } e _ { i }",
+    "pred": "x ^ { i } e _ { i } = \\sum \\limits _ { i } x ^ { i } e _ { i }",
+    "dist": 1
+  },
+  {
+    "id": "26_em_78",
+    "gt": "1 6 9",
+    "pred": "I 6 9",
+    "dist": 1
+  },
+  {
+    "id": "26_em_80",
+    "gt": "\\frac { 3 1 9 } { 2 8 } = 1 1 . 3 9",
+    "pred": "\\frac { 3 1 9 } { 2 8 } = 1 \\cdot 3 9",
+    "dist": 2
+  },
+  {
+    "id": "26_em_82",
+    "gt": "\\frac { 1 } { 2 } t ^ { 2 } u ( t )",
+    "pred": "\\frac { 1 } { 2 } k ^ { 2 } u ( t )",
+    "dist": 1
+  },
+  {
+    "id": "26_em_83",
+    "gt": "\\ d _ { t } = \\frac { a ( t ) - a ( t - 1 ) } { a ( t ) }",
+    "pred": "d _ { t } = \\frac { a ( t ) - a ( t - 1 ) } { a ( t ) }",
+    "dist": 1
+  },
+  {
+    "id": "26_em_84",
+    "gt": "S _ { \\infty } = \\lim _ { n \\rightarrow \\infty } \\frac { a ( 1 - r ^ n ) } { 1 - r } = \\frac { a } { 1 - r }",
+    "pred": "s _ { 0 } = \\lim \\limits _ { n \\rightarrow \\infty } \\frac { a ( 1 - p ^ { n } { ) } } { 1 - p } = \\frac { a } { 1 - p }",
+    "dist": 10
+  },
+  {
+    "id": "26_em_85",
+    "gt": "\\log _ { u } g \\ !",
+    "pred": "\\log _ { u } 9",
+    "dist": 3
+  },
+  {
+    "id": "26_em_87",
+    "gt": "\\int x \\cos ( x ) d x = x \\sin ( x ) - \\int \\sin ( x ) d x",
+    "pred": "\\int x \\cos ( x ) d x = x \\sin ( x ) - \\int \\limits _ { \\sin ( x ) + x ) x + x }",
+    "dist": 9
+  },
+  {
+    "id": "26_em_88",
+    "gt": "v ^ { 2 } - { v _ { v } } ^ { 2 } = v _ { v } ^ { 2 }",
+    "pred": "y ^ { 2 } - v _ { v } ^ { 2 } = v _ { v } ^ { 2 }",
+    "dist": 3
+  },
+  {
+    "id": "26_em_89",
+    "gt": "x ^ { 2 } + y ^ { 2 } = l _ { 1 } ^ { 2 } + l _ { 2 } ^ { 2 } + 2 l _ { 1 } l _ { 2 } c _ { 2 }",
+    "pred": "x ^ { 2 } + y ^ { 2 } = l _ { 1 } ^ { 2 } + l _ { 2 } ^ { 2 } + 2 l _ { 2 } ( 2",
+    "dist": 9
+  },
+  {
+    "id": "26_em_91",
+    "gt": "k [ a ^ { - 1 } ]",
+    "pred": "| < [ a ^ { - 1 } ]",
+    "dist": 2
+  },
+  {
+    "id": "26_em_92",
+    "gt": "- \\frac { 1 1 \\pi } { 8 }",
+    "pred": "- \\frac { 1 1 r } { 8 }",
+    "dist": 1
+  },
+  {
+    "id": "26_em_93",
+    "gt": "4 \\times 4 + 4 - 4 \\ !",
+    "pred": "4 \\times 4 + 4 - 4",
+    "dist": 2
+  },
+  {
+    "id": "26_em_94",
+    "gt": "\\left [ \\frac { 1 } { 2 } \\sin ^ { 2 } ( 1 ) \\right ] - \\left [ \\frac { 1 } { 2 } \\sin ^ { 2 } ( 0 ) \\right ]",
+    "pred": "[ \\frac { 1 } { 2 } \\sin ^ { 2 } ( 1 ) ] - [ \\frac { 1 } { 2 } \\sin ^ { 2 } ( 0 ) ]",
+    "dist": 4
+  },
+  {
+    "id": "26_em_98",
+    "gt": "( \\sqrt { 2 } x + 2 ) ( x + 3 )",
+    "pred": "( \\sqrt { 2 } x + 2 ) ( x + \\frac { 3 ) } { 2 }",
+    "dist": 6
+  },
+  {
+    "id": "26_em_99",
+    "gt": "\\ $ 1 0 , 0 0 0 + $ 1 , 0 0 0 = $ 1 1 , 0 0 0",
+    "pred": "1 0 , 0 0 0 + 1 , 0 0 0 = 1 1 0 0 0",
+    "dist": 5
+  },
+  {
+    "id": "27_em_102",
+    "gt": "\\lim _ { a \\rightarrow \\infty } f ( a ) \\ !",
+    "pred": "\\lim \\limits _ { a \\rightarrow \\infty } f ( a )",
+    "dist": 3
+  },
+  {
+    "id": "27_em_104",
+    "gt": "w = q _ { H } - q _ { C }",
+    "pred": "w = q _ { H } - q _ { e }",
+    "dist": 1
+  },
+  {
+    "id": "27_em_105",
+    "gt": "{ ( a - 2 x ) ( a + 2 x ) }",
+    "pred": "( a - 2 x ) ( a + 2 x )",
+    "dist": 2
+  },
+  {
+    "id": "27_em_107",
+    "gt": "\\int k x ^ { n } d x = k \\int x ^ { n } d x",
+    "pred": "\\int x ^ { n } d x = k \\int x ^ { n } d x",
+    "dist": 1
+  },
+  {
+    "id": "27_em_112",
+    "gt": "\\mathrm { M } _ { 3 }",
+    "pred": "M _ { 3 }",
+    "dist": 3
+  },
+  {
+    "id": "27_em_113",
+    "gt": "x = \\frac { a f ( b ) - b f ( a ) } { f ( b ) - f ( a ) }",
+    "pred": "x = \\frac { a _ { b } { ( } b ) - b ( a ) } { f ( b ) - f ( a ) }",
+    "dist": 7
+  },
+  {
+    "id": "27_em_114",
+    "gt": "\\int { \\sin 2 \\theta } d \\theta",
+    "pred": "\\int \\sin 2 \\theta d \\theta",
+    "dist": 2
+  },
+  {
+    "id": "27_em_116",
+    "gt": "v _ { 7 } + v _ { 3 } + v _ { 4 } - v _ { 8 } = 0",
+    "pred": "u _ { T } + v _ { 3 } + v _ { 4 } - v _ { 8 } = 0",
+    "dist": 2
+  },
+  {
+    "id": "27_em_120",
+    "gt": "{ \\sqrt { 1 5 } }",
+    "pred": "\\sqrt { 1 5 }",
+    "dist": 2
+  },
+  {
+    "id": "27_em_121",
+    "gt": "1 - z + z ^ { 2 } - z ^ { 3 } + z ^ { 4 } - z ^ { 5 } + \\ldots",
+    "pred": "1 - z + z ^ { 2 } - z ^ { 3 } + z ^ { 4 } - z ^ { 5 } + \\cdots",
+    "dist": 1
+  },
+  {
+    "id": "27_em_122",
+    "gt": "\\pm \\sqrt { [ } x ] b",
+    "pred": "\\pm \\sqrt { [ } x ] { b }",
+    "dist": 2
+  },
+  {
+    "id": "27_em_124",
+    "gt": "a \\div b",
+    "pred": "a \\frac { o } { o } b",
+    "dist": 7
+  },
+  {
+    "id": "28_em_126",
+    "gt": "\\frac { \\sum _ { k = 1 } { ^ } N k ^ { 2 } } { a }",
+    "pred": "\\frac { \\sum \\limits _ { i = 1 } { ^ } { N } k ^ { 2 } } { a }",
+    "dist": 4
+  },
+  {
+    "id": "28_em_127",
+    "gt": "X , X _ { t }",
+    "pred": "x , x _ { t }",
+    "dist": 2
+  },
+  {
+    "id": "28_em_128",
+    "gt": "\\frac { x ^ 2 } { 9 } - \\frac { y ^ 2 } { 4 9 } = 1",
+    "pred": "\\frac { x ^ { 2 } { } } { q } - \\frac { y ^ { 2 } { } } { 4 q } = 1",
+    "dist": 10
+  },
+  {
+    "id": "28_em_129",
+    "gt": "- \\frac { 1 } { \\sqrt 2 } ( \\frac { b } { \\sqrt 2 } - 0 )",
+    "pred": "- \\frac { 1 } { \\sqrt { 2 } } ( \\frac { b } { \\sqrt { 2 } } - 0 )",
+    "dist": 4
+  },
+  {
+    "id": "28_em_130",
+    "gt": "\\log { x } + \\log { y } = \\log { x y } \\ !",
+    "pred": "\\log x + \\log y = \\log x y",
+    "dist": 8
+  },
+  {
+    "id": "28_em_131",
+    "gt": "z y + 2 z y + 2 z + 2 y",
+    "pred": "z y + 2 z + 2 z + 2 y",
+    "dist": 1
+  },
+  {
+    "id": "28_em_134",
+    "gt": "\\frac { n _ { A } { } } { n }",
+    "pred": "\\frac { n _ { A } { } } { h }",
+    "dist": 1
+  },
+  {
+    "id": "28_em_136",
+    "gt": "\\pi _ { t + 1 }",
+    "pred": "\\pi _ { t } + 1",
+    "dist": 2
+  },
+  {
+    "id": "28_em_137",
+    "gt": "3 , 4 , 5 , 6 , \\ldots",
+    "pred": "3 a 4 , 5 , 6",
+    "dist": 3
+  },
+  {
+    "id": "28_em_138",
+    "gt": "\\mathrm { R ^ { 0 } _ { 0 } } \\ !",
+    "pred": "R _ { 0 } ^ { 0 }",
+    "dist": 7
+  },
+  {
+    "id": "28_em_139",
+    "gt": "x y x + x y + y x + y = x ^ { 2 } y + x y + x y + y",
+    "pred": "x y x + x y + y + y = x y + x y + x y + y",
+    "dist": 5
+  },
+  {
+    "id": "28_em_142",
+    "gt": "\\frac { 4 4 4 6 7 } { 3 8 9 7 3 }",
+    "pred": "\\frac { 4 4 4 6 7 } { 3 8 9 4 7 }",
+    "dist": 2
+  },
+  {
+    "id": "28_em_143",
+    "gt": "[ [ S ] ] = [ S ]",
+    "pred": "[ [ 5 ] ] = [ s ]",
+    "dist": 2
+  },
+  {
+    "id": "28_em_144",
+    "gt": "\\sum _ { i } { k } _ { i }",
+    "pred": "\\sum \\limits _ { i } k _ { i }",
+    "dist": 3
+  },
+  {
+    "id": "28_em_149",
+    "gt": "\\frac { 1 } { x + y } - \\frac { 1 } { x - y } = \\frac { - 2 y } { x ^ 2 - y ^ 2 }",
+    "pred": "\\frac { 1 } { x + y } - \\frac { 1 } { x - y } } = \\frac { - z y } { x ^ { 2 } - y ^ { 2 } }",
+    "dist": 6
+  },
+  {
+    "id": "29_em_150",
+    "gt": "{ 6 0 } ^ { o } \\ !",
+    "pred": "6 0 ^ { 0 }",
+    "dist": 5
+  },
+  {
+    "id": "29_em_151",
+    "gt": "\\ ! \\mathrm { P a }",
+    "pred": "p _ { a }",
+    "dist": 4
+  },
+  {
+    "id": "29_em_152",
+    "gt": "\\sqrt { - n } = i \\sqrt { n } \\ !",
+    "pred": "\\sqrt { - n } = i \\sqrt { n }",
+    "dist": 2
+  },
+  {
+    "id": "29_em_157",
+    "gt": "y = y \\prime",
+    "pred": "y = y ^ { | }",
+    "dist": 4
+  },
+  {
+    "id": "29_em_158",
+    "gt": "\\alpha ^ { 4 } + \\alpha ^ { 6 } + \\alpha ^ { 7 } + \\alpha ^ { 9 }",
+    "pred": "a ^ { 4 } + \\alpha ^ { 6 } + \\alpha ^ { 7 } + \\alpha ^ { 9 }",
+    "dist": 1
+  },
+  {
+    "id": "29_em_161",
+    "gt": "f ( z _ { 0 } ) = \\lim _ { z \\rightarrow z _ { 0 } } f ( z )",
+    "pred": "f ( z _ { 0 } ) = \\lim \\limits _ { 3 \\rightarrow z _ { 0 } } f ( x )",
+    "dist": 3
+  },
+  {
+    "id": "29_em_162",
+    "gt": "\\frac { f \\prime ( x ) } { g \\prime ( x ) }",
+    "pred": "\\frac { f ^ { \\prime } { ( } x ) } { q ^ { ( x ) } }",
+    "dist": 9
+  },
+  {
+    "id": "29_em_163",
+    "gt": "C _ { t } = C + C = 2 C",
+    "pred": "c _ { t } = c + c = 2 C",
+    "dist": 3
+  },
+  {
+    "id": "29_em_164",
+    "gt": "\\cos \\pi z",
+    "pred": "C 0 ] \\pi \\gamma",
+    "dist": 4
+  },
+  {
+    "id": "29_em_166",
+    "gt": "\\int \\frac { 3 x + 1 } { x ^ 2 + x } d x",
+    "pred": "\\int \\frac { 3 x + 1 } { x ^ { 2 } + x } d x",
+    "dist": 2
+  },
+  {
+    "id": "29_em_167",
+    "gt": "\\cos ( n x ) = 2 \\cos ( x ) \\cos [ ( n - 1 ) x ] - \\cos [ ( n - 2 ) x ]",
+    "pred": "\\cos ( x ) = 2 \\cos ( x ) \\cos ( x - 1 ) x - \\cos ( x - 2 ) x )",
+    "dist": 7
+  }
+]

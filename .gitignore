@@ -32,3 +32,6 @@ dist-lib
 
 .vercel
 .env*.local
+
+# Benchmark data (CROHME dataset)
+benchmark/data/
